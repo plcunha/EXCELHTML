@@ -84,11 +84,13 @@ export function Header({ className }: HeaderProps) {
               'dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
             )}
             title={isDarkMode ? 'Modo claro' : 'Modo escuro'}
+            aria-label={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            aria-pressed={isDarkMode}
           >
             {isDarkMode ? (
-              <Sun className="w-5 h-5" />
+              <Sun className="w-5 h-5" aria-hidden="true" />
             ) : (
-              <Moon className="w-5 h-5" />
+              <Moon className="w-5 h-5" aria-hidden="true" />
             )}
           </button>
           
@@ -100,8 +102,9 @@ export function Header({ className }: HeaderProps) {
               'dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
             )}
             title="Configurações"
+            aria-label="Abrir configurações"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       </div>
