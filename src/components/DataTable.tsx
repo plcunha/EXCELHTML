@@ -232,13 +232,14 @@ export function DataTable({ className }: DataTableProps) {
   return (
     <div className={cn('overflow-hidden rounded-xl border border-gray-200 bg-white shadow-soft', className)}>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full" role="grid" aria-label="Tabela de dados">
           {/* Header */}
           <thead>
             <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               {visibleColumns.map((column) => (
                 <th
                   key={column.key}
+                  scope="col"
                   className={cn(
                     'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider',
                     column.sortable && 'cursor-pointer hover:bg-gray-100 select-none transition-colors',
@@ -249,6 +250,18 @@ export function DataTable({ className }: DataTableProps) {
                   )}
                   style={{ width: column.width }}
                   onClick={() => handleSort(column)}
+                  aria-sort={
+                    tableState.sort?.column === column.key
+                      ? tableState.sort.direction === 'asc' ? 'ascending' : 'descending'
+                      : undefined
+                  }
+                  tabIndex={column.sortable ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (column.sortable && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault()
+                      handleSort(column)
+                    }
+                  }}
                 >
                   <div className={cn(
                     'flex items-center gap-1.5',
@@ -257,7 +270,7 @@ export function DataTable({ className }: DataTableProps) {
                   )}>
                     <span>{column.label}</span>
                     {column.sortable && (
-                      <span className="text-gray-400">
+                      <span className="text-gray-400" aria-hidden="true">
                         {tableState.sort?.column === column.key ? (
                           tableState.sort.direction === 'asc' ? (
                             <ArrowUp className="w-3.5 h-3.5 text-primary-600" />
