@@ -1,0 +1,65 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  darkMode: 'class',
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Cores customizáveis por empresa via CSS variables
+        primary: {
+          50: 'var(--color-primary-50, #eff6ff)',
+          100: 'var(--color-primary-100, #dbeafe)',
+          200: 'var(--color-primary-200, #bfdbfe)',
+          300: 'var(--color-primary-300, #93c5fd)',
+          400: 'var(--color-primary-400, #60a5fa)',
+          500: 'var(--color-primary-500, #3b82f6)',
+          600: 'var(--color-primary-600, #2563eb)',
+          700: 'var(--color-primary-700, #1d4ed8)',
+          800: 'var(--color-primary-800, #1e40af)',
+          900: 'var(--color-primary-900, #1e3a8a)',
+        },
+        accent: {
+          50: 'var(--color-accent-50, #f0fdf4)',
+          100: 'var(--color-accent-100, #dcfce7)',
+          500: 'var(--color-accent-500, #22c55e)',
+          600: 'var(--color-accent-600, #16a34a)',
+        },
+      },
+      fontFamily: {
+        sans: ['var(--font-sans, Inter)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono, Fira Code)', 'monospace'],
+      },
+      boxShadow: {
+        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.3s ease-out',
+        'pulse-soft': 'pulseSoft 2s infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config
