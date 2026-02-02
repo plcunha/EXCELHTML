@@ -28,11 +28,14 @@ export function Pagination({ className }: PaginationProps) {
   }
   
   return (
-    <div className={cn(
-      'flex flex-wrap items-center justify-between gap-4 p-4',
-      'bg-white rounded-xl border border-gray-200 shadow-soft',
-      className
-    )}>
+    <nav 
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-4 p-4',
+        'bg-white rounded-xl border border-gray-200 shadow-soft',
+        className
+      )}
+      aria-label="Paginação da tabela"
+    >
       {/* Info e seletor de tamanho */}
       <div className="flex items-center gap-4">
         <span className="text-sm text-gray-500">
@@ -41,10 +44,12 @@ export function Pagination({ className }: PaginationProps) {
         </span>
         
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500">Itens por página:</label>
+          <label htmlFor="page-size-select" className="text-sm text-gray-500">Itens por página:</label>
           <select
+            id="page-size-select"
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
+            aria-label="Selecionar quantidade de itens por página"
             className={cn(
               'px-2 py-1 text-sm rounded-lg border border-gray-200',
               'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500'
@@ -72,8 +77,9 @@ export function Pagination({ className }: PaginationProps) {
               : 'text-gray-500 hover:bg-gray-100'
           )}
           title="Primeira página"
+          aria-label="Ir para primeira página"
         >
-          <ChevronsLeft className="w-4 h-4" />
+          <ChevronsLeft className="w-4 h-4" aria-hidden="true" />
         </button>
         
         {/* Página anterior */}
@@ -87,8 +93,9 @@ export function Pagination({ className }: PaginationProps) {
               : 'text-gray-500 hover:bg-gray-100'
           )}
           title="Página anterior"
+          aria-label="Ir para página anterior"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
         </button>
         
         {/* Números de página */}
@@ -102,6 +109,8 @@ export function Pagination({ className }: PaginationProps) {
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
+                aria-label={`Ir para página ${pageNum}`}
+                aria-current={pageNum === page ? 'page' : undefined}
                 className={cn(
                   'min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-colors',
                   pageNum === page
@@ -126,8 +135,9 @@ export function Pagination({ className }: PaginationProps) {
               : 'text-gray-500 hover:bg-gray-100'
           )}
           title="Próxima página"
+          aria-label="Ir para próxima página"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
         </button>
         
         {/* Última página */}
@@ -141,10 +151,11 @@ export function Pagination({ className }: PaginationProps) {
               : 'text-gray-500 hover:bg-gray-100'
           )}
           title="Última página"
+          aria-label="Ir para última página"
         >
-          <ChevronsRight className="w-4 h-4" />
+          <ChevronsRight className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </nav>
   )
 }
