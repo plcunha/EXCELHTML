@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { 
   Header, 
   FileUpload, 
@@ -11,13 +11,72 @@ import {
 } from '@/components'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
-import { BarChart3, Table2, Upload, Sparkles } from 'lucide-react'
+import { BarChart3, Table2, Upload, Sparkles, Keyboard, X } from 'lucide-react'
+import { useKeyboardShortcuts, formatShortcut, type KeyboardShortcut } from '@/lib/useKeyboardShortcuts'
 
 type ViewMode = 'table' | 'charts'
 
 export default function HomePage() {
-  const { data, isLoading, error } = useAppStore()
+  const { data, isLoading, error, toggleDarkMode, clearData, setSearch, setPage, tableState } = useAppStore()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Memoized actions for keyboard shortcuts
+  const focusSearch = useCallback(() => {
+    searchInputRef.current?.focus()
+  }, [])
+  
+  const toggleView = useCallback(() => {
+    setViewMode(prev => prev === 'table' ? 'charts' : 'table')
+  }, [])
+  
+  const triggerUpload = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+  
+  const goToFirstPage = useCallback(() => {
+    if (data) setPage(1)
+  }, [data, setPage])
+  
+  const goToLastPage = useCallback(() => {
+    if (data) setPage(tableState.pagination.totalPages)
+  }, [data, setPage, tableState.pagination.totalPages])
+  
+  const goToPrevPage = useCallback(() => {
+    if (data && tableState.pagination.page > 1) {
+      setPage(tableState.pagination.page - 1)
+    }
+  }, [data, setPage, tableState.pagination.page])
+  
+  const goToNextPage = useCallback(() => {
+    if (data && tableState.pagination.page < tableState.pagination.totalPages) {
+      setPage(tableState.pagination.page + 1)
+    }
+  }, [data, setPage, tableState.pagination.page, tableState.pagination.totalPages])
+  
+  const clearSearch = useCallback(() => {
+    setSearch('')
+  }, [setSearch])
+  
+  // Define keyboard shortcuts
+  const shortcuts: KeyboardShortcut[] = useMemo(() => [
+    { key: 'f', ctrl: true, action: focusSearch, description: 'Focar na busca' },
+    { key: 'o', ctrl: true, action: triggerUpload, description: 'Abrir arquivo' },
+    { key: 'v', ctrl: true, shift: true, action: toggleView, description: 'Alternar tabela/gráficos' },
+    { key: 'd', ctrl: true, action: toggleDarkMode, description: 'Alternar modo escuro' },
+    { key: 'Escape', action: clearSearch, description: 'Limpar busca' },
+    { key: '?', shift: true, action: () => setShowShortcuts(true), description: 'Mostrar atalhos' },
+    { key: 'Home', ctrl: true, action: goToFirstPage, description: 'Primeira página' },
+    { key: 'End', ctrl: true, action: goToLastPage, description: 'Última página' },
+    { key: 'ArrowLeft', ctrl: true, action: goToPrevPage, description: 'Página anterior' },
+    { key: 'ArrowRight', ctrl: true, action: goToNextPage, description: 'Próxima página' },
+    { key: 'Delete', ctrl: true, action: clearData, description: 'Limpar dados' },
+  ], [focusSearch, triggerUpload, toggleView, toggleDarkMode, clearSearch, goToFirstPage, goToLastPage, goToPrevPage, goToNextPage, clearData])
+  
+  // Register keyboard shortcuts
+  useKeyboardShortcuts(shortcuts)
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -143,11 +202,38 @@ export default function HomePage() {
       
       {/* Footer */}
       <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
-        <p>
-          Excel Viewer © {new Date().getFullYear()} • 
-          Sistema modular para visualização de dados
-        </p>
+        <div className="flex items-center justify-center gap-4">
+          <p>
+            Excel Viewer © {new Date().getFullYear()} • 
+            Sistema modular para visualização de dados
+          </p>
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="flex items-center gap-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            aria-label="Mostrar atalhos de teclado"
+          >
+            <Keyboard className="w-4 h-4" />
+            <span className="text-xs">Shift + ?</span>
+          </button>
+        </div>
       </footer>
+      
+      {/* Hidden file input for keyboard shortcut */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        aria-hidden="true"
+      />
+      
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && (
+        <KeyboardShortcutsModal
+          shortcuts={shortcuts}
+          onClose={() => setShowShortcuts(false)}
+        />
+      )}
     </div>
   )
 }
@@ -173,6 +259,80 @@ function FeatureCard({
       <p className="text-xs text-gray-500 dark:text-gray-400">
         {description}
       </p>
+    </div>
+  )
+}
+
+// Keyboard shortcuts modal
+function KeyboardShortcutsModal({
+  shortcuts,
+  onClose,
+}: {
+  shortcuts: KeyboardShortcut[]
+  onClose: () => void
+}) {
+  // Close on Escape
+  useKeyboardShortcuts([
+    { key: 'Escape', action: onClose, description: 'Fechar modal' },
+  ])
+  
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shortcuts-title"
+    >
+      <div 
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <Keyboard className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 id="shortcuts-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+              Atalhos de Teclado
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* Shortcuts List */}
+        <div className="px-6 py-4 max-h-96 overflow-y-auto">
+          <div className="space-y-2">
+            {shortcuts.map((shortcut, index) => (
+              <div 
+                key={index}
+                className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {shortcut.description}
+                </span>
+                <kbd className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+                  {formatShortcut(shortcut)}
+                </kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            Pressione <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Esc</kbd> para fechar
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
