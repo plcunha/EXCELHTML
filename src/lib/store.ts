@@ -6,7 +6,8 @@ import type {
   CompanyConfig, 
   DataSchema,
   FilterState,
-  SortState 
+  SortState,
+  CellValue 
 } from '@/types'
 import { companyPresets } from './config'
 
@@ -27,6 +28,10 @@ interface AppState {
   // Estado da tabela
   tableState: TableState
   
+  // Modo de edição
+  isEditMode: boolean
+  editingCell: { rowId: string; columnKey: string } | null
+  
   // Schemas salvos
   savedSchemas: Record<string, DataSchema>
   
@@ -35,6 +40,11 @@ interface AppState {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   clearData: () => void
+  
+  // Actions - Edição
+  setEditMode: (enabled: boolean) => void
+  setEditingCell: (cell: { rowId: string; columnKey: string } | null) => void
+  updateCell: (rowId: string, columnKey: string, value: CellValue) => void
   
   // Actions - Empresa/Tema
   setCompany: (companyId: string) => void
@@ -81,6 +91,8 @@ export const useAppStore = create<AppState>()(
       company: companyPresets.default,
       isDarkMode: false,
       tableState: defaultTableState,
+      isEditMode: false,
+      editingCell: null,
       savedSchemas: {},
       
       // Actions - Dados
@@ -88,6 +100,8 @@ export const useAppStore = create<AppState>()(
         set({ 
           data, 
           error: null,
+          isEditMode: false,
+          editingCell: null,
           tableState: {
             ...defaultTableState,
             visibleColumns: data?.schema.columns
@@ -110,7 +124,33 @@ export const useAppStore = create<AppState>()(
       clearData: () => set({ 
         data: null, 
         error: null, 
+        isEditMode: false,
+        editingCell: null,
         tableState: defaultTableState 
+      }),
+      
+      // Actions - Edição
+      setEditMode: (isEditMode) => set({ isEditMode, editingCell: null }),
+      
+      setEditingCell: (editingCell) => set({ editingCell }),
+      
+      updateCell: (rowId, columnKey, value) => set((state) => {
+        if (!state.data) return state
+        
+        const updatedRows = state.data.rows.map(row => {
+          if (row._id === rowId) {
+            return { ...row, [columnKey]: value }
+          }
+          return row
+        })
+        
+        return {
+          data: {
+            ...state.data,
+            rows: updatedRows,
+          },
+          editingCell: null,
+        }
       }),
       
       // Actions - Empresa/Tema

@@ -7,7 +7,9 @@ import {
   RefreshCw, 
   Printer,
   ChevronDown,
-  X
+  X,
+  Pencil,
+  PencilOff
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -26,7 +28,9 @@ export function Toolbar({ className }: ToolbarProps) {
     setSearch, 
     clearFilters, 
     resetTableState, 
-    toggleColumn 
+    toggleColumn,
+    isEditMode,
+    setEditMode
   } = useAppStore()
   
   const [showColumnPicker, setShowColumnPicker] = useState(false)
@@ -211,6 +215,26 @@ export function Toolbar({ className }: ToolbarProps) {
         >
           <Printer className="w-4 h-4" aria-hidden="true" />
           <span className="hidden sm:inline">Imprimir</span>
+        </button>
+        
+        {/* Edit Mode Toggle */}
+        <button
+          onClick={() => setEditMode(!isEditMode)}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors',
+            isEditMode 
+              ? 'text-primary-600 bg-primary-50 hover:bg-primary-100 ring-1 ring-primary-200' 
+              : 'text-gray-600 bg-gray-50 hover:bg-gray-100'
+          )}
+          aria-label={isEditMode ? 'Desativar modo de edição' : 'Ativar modo de edição'}
+          aria-pressed={isEditMode}
+        >
+          {isEditMode ? (
+            <PencilOff className="w-4 h-4" aria-hidden="true" />
+          ) : (
+            <Pencil className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span className="hidden sm:inline">{isEditMode ? 'Editando' : 'Editar'}</span>
         </button>
         
         {/* Reset */}

@@ -17,6 +17,7 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
 - 🔒 **Seguro** - Headers de segurança e validação de arquivos
 - ⚡ **Rápido** - Web Workers para parsing assíncrono + processamento no cliente
 - ⌨️ **Atalhos de Teclado** - Navegação rápida (Shift+? para ver todos)
+- ✏️ **Edição Inline** - Edite células diretamente na tabela (modo editável)
 
 ## 🚀 Início Rápido
 

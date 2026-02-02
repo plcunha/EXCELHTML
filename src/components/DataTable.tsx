@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { 
   ArrowUpDown, 
   ArrowUp, 
@@ -10,7 +10,8 @@ import {
   Phone,
   Check,
   X,
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Pencil
 } from 'lucide-react'
 import { cn, formatValue } from '@/lib/utils'
 import { useAppStore, useFilteredData } from '@/lib/store'
@@ -189,6 +190,120 @@ function TableCell({ value, column }: CellProps) {
 }
 
 // ============================================
+// CÉLULA EDITÁVEL
+// ============================================
+
+interface EditableCellProps {
+  rowId: string
+  value: CellValue
+  column: ColumnDefinition
+  isEditing: boolean
+  onStartEdit: () => void
+  onSave: (value: CellValue) => void
+  onCancel: () => void
+}
+
+function EditableCell({ 
+  rowId: _rowId, 
+  value, 
+  column, 
+  isEditing, 
+  onStartEdit, 
+  onSave, 
+  onCancel 
+}: EditableCellProps) {
+  const [editValue, setEditValue] = useState<string>(String(value ?? ''))
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditing])
+  
+  useEffect(() => {
+    setEditValue(String(value ?? ''))
+  }, [value])
+  
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const type = column.format.type
+      let newValue: CellValue = editValue
+      
+      // Type conversion
+      if (type === 'number' || type === 'currency' || type === 'percentage' || type === 'progress') {
+        const num = parseFloat(editValue.replace(/[^\d.-]/g, ''))
+        newValue = isNaN(num) ? null : num
+      } else if (type === 'boolean') {
+        newValue = ['true', 'sim', 'yes', '1', 's'].includes(editValue.toLowerCase())
+      }
+      
+      onSave(newValue)
+    } else if (e.key === 'Escape') {
+      setEditValue(String(value ?? ''))
+      onCancel()
+    } else if (e.key === 'Tab') {
+      // Allow tab to move to next cell (handled by parent)
+    }
+  }, [editValue, column.format.type, onSave, onCancel, value])
+  
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => {
+          // Save on blur
+          const type = column.format.type
+          let newValue: CellValue = editValue
+          
+          if (type === 'number' || type === 'currency' || type === 'percentage' || type === 'progress') {
+            const num = parseFloat(editValue.replace(/[^\d.-]/g, ''))
+            newValue = isNaN(num) ? null : num
+          } else if (type === 'boolean') {
+            newValue = ['true', 'sim', 'yes', '1', 's'].includes(editValue.toLowerCase())
+          }
+          
+          onSave(newValue)
+        }}
+        className={cn(
+          'w-full px-2 py-1 text-sm border-2 border-primary-500 rounded-md',
+          'focus:outline-none focus:ring-2 focus:ring-primary-300',
+          'bg-white dark:bg-gray-800'
+        )}
+        aria-label={`Editar ${column.label}`}
+      />
+    )
+  }
+  
+  return (
+    <div 
+      className="group relative cursor-pointer"
+      onClick={onStartEdit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === 'F2') {
+          e.preventDefault()
+          onStartEdit()
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label={`Clique para editar ${column.label}: ${formatValue(value, column.format)}`}
+    >
+      <TableCell value={value} column={column} />
+      <span className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Pencil className="w-3 h-3 text-gray-400" />
+      </span>
+    </div>
+  )
+}
+
+// ============================================
 // COMPONENTE PRINCIPAL DA TABELA
 // ============================================
 
@@ -197,7 +312,7 @@ interface DataTableProps {
 }
 
 export function DataTable({ className }: DataTableProps) {
-  const { data, tableState, setSort } = useAppStore()
+  const { data, tableState, setSort, isEditMode, editingCell, setEditingCell, updateCell } = useAppStore()
   const { rows, totalFiltered } = useFilteredData()
   
   // Colunas visíveis
@@ -303,22 +418,44 @@ export function DataTable({ className }: DataTableProps) {
               rows.map((row) => (
                 <tr
                   key={row._id}
-                  className="hover:bg-gray-50/50 transition-colors"
+                  className={cn(
+                    'hover:bg-gray-50/50 transition-colors',
+                    isEditMode && 'hover:bg-primary-50/30'
+                  )}
                 >
-                  {visibleColumns.map((column) => (
-                    <td
-                      key={`${row._id}-${column.key}`}
-                      className={cn(
-                        'px-4 py-3 text-sm text-gray-700',
-                        column.align === 'center' && 'text-center',
-                        column.align === 'right' && 'text-right',
-                        column.sticky === 'left' && 'sticky left-0 bg-white z-10',
-                        column.sticky === 'right' && 'sticky right-0 bg-white z-10',
-                      )}
-                    >
-                      <TableCell value={row[column.key]} column={column} />
-                    </td>
-                  ))}
+                  {visibleColumns.map((column) => {
+                    const isThisCellEditing = editingCell?.rowId === row._id && editingCell?.columnKey === column.key
+                    const isEditableType = !['image', 'url', 'email', 'phone'].includes(column.format.type)
+                    
+                    return (
+                      <td
+                        key={`${row._id}-${column.key}`}
+                        className={cn(
+                          'px-4 py-3 text-sm text-gray-700',
+                          column.align === 'center' && 'text-center',
+                          column.align === 'right' && 'text-right',
+                          column.sticky === 'left' && 'sticky left-0 bg-white z-10',
+                          column.sticky === 'right' && 'sticky right-0 bg-white z-10',
+                          isEditMode && isEditableType && 'cursor-pointer hover:bg-primary-50',
+                          isThisCellEditing && 'p-1',
+                        )}
+                      >
+                        {isEditMode && isEditableType ? (
+                          <EditableCell
+                            rowId={row._id}
+                            value={row[column.key]}
+                            column={column}
+                            isEditing={isThisCellEditing}
+                            onStartEdit={() => setEditingCell({ rowId: row._id, columnKey: column.key })}
+                            onSave={(value) => updateCell(row._id, column.key, value)}
+                            onCancel={() => setEditingCell(null)}
+                          />
+                        ) : (
+                          <TableCell value={row[column.key]} column={column} />
+                        )}
+                      </td>
+                    )
+                  })}
                 </tr>
               ))
             )}
