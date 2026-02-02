@@ -88,8 +88,9 @@ export function Toolbar({ className }: ToolbarProps) {
           <button
             onClick={() => setSearch('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            aria-label="Limpar busca"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -107,8 +108,9 @@ export function Toolbar({ className }: ToolbarProps) {
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
               'text-red-600 bg-red-50 hover:bg-red-100 transition-colors'
             )}
+            aria-label="Limpar todos os filtros"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
             <span>Limpar filtros</span>
           </button>
         )}
@@ -122,10 +124,13 @@ export function Toolbar({ className }: ToolbarProps) {
               'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
               showColumnPicker && 'bg-gray-100'
             )}
+            aria-label="Selecionar colunas visíveis"
+            aria-expanded={showColumnPicker}
+            aria-haspopup="true"
           >
-            <Columns className="w-4 h-4" />
+            <Columns className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Colunas</span>
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
           
           {showColumnPicker && (
@@ -162,10 +167,13 @@ export function Toolbar({ className }: ToolbarProps) {
               'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
               showExportMenu && 'bg-gray-100'
             )}
+            aria-label="Exportar dados"
+            aria-expanded={showExportMenu}
+            aria-haspopup="true"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Exportar</span>
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
           
           {showExportMenu && (
@@ -199,8 +207,9 @@ export function Toolbar({ className }: ToolbarProps) {
             'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
             'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors'
           )}
+          aria-label="Imprimir tabela"
         >
-          <Printer className="w-4 h-4" />
+          <Printer className="w-4 h-4" aria-hidden="true" />
           <span className="hidden sm:inline">Imprimir</span>
         </button>
         
@@ -212,8 +221,9 @@ export function Toolbar({ className }: ToolbarProps) {
             'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors'
           )}
           title="Resetar visualização"
+          aria-label="Resetar visualização da tabela"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
     </div>
