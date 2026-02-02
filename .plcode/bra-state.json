@@ -1,0 +1,120 @@
+{
+  "repo": "C:\\Users\\pbc\\Documents\\GitHub\\EXCELHTML",
+  "mode": "dev_background",
+  "status": "idle",
+  "metrics": {
+    "prs_created": 0,
+    "tests_added": 0,
+    "bugs_fixed": 0,
+    "tokens_used_today": 0,
+    "total_cost": 0
+  },
+  "memory": {
+    "short_term": {
+      "last_files_modified": [],
+      "recent_errors": []
+    },
+    "long_term": {
+      "architectural_decisions": {},
+      "accepted_patterns": [],
+      "recurring_errors": {},
+      "successful_strategies": []
+    },
+    "context_metrics": {
+      "available_tokens": 0,
+      "loaded_tokens": 0,
+      "tokens_saved": 0,
+      "savings_percentage": 0,
+      "cache_efficiency": 0,
+      "efficiency_score": 0
+    },
+    "active_marker": "2026-02-02-18-04_excel-viewer-complete",
+    "loaded_docs": {}
+  },
+  "ralph_loop": {
+    "active": false,
+    "queue": [],
+    "total_loops_completed": 0,
+    "total_iterations": 0,
+    "self_reference_memory": {
+      "previous_outputs": [],
+      "file_snapshots": {},
+      "iteration_context": {}
+    }
+  },
+  "conversation_tracker": {
+    "prompt_history": [],
+    "response_history": [],
+    "quality_trend": "stable",
+    "focus_score": 100
+  },
+  "behavior_validator": {
+    "last_anomaly_check": "",
+    "anomaly_count": 0,
+    "loop_detected_count": 0,
+    "is_confused": false,
+    "confidence_level": 100
+  },
+  "progress_validator": {
+    "last_progress_check": "",
+    "stagnation_count": 0,
+    "real_progress_detected": true,
+    "iteration_without_progress": 0
+  },
+  "auto_correction": {
+    "enabled": true,
+    "corrections_applied": 0,
+    "corrections_successful": 0,
+    "rollbacks_executed": 0,
+    "active_strategies": []
+  },
+  "detection_metrics": {
+    "total_detections": 0,
+    "true_positives": 0,
+    "false_positives": 0,
+    "true_negatives": 0,
+    "false_negatives": 0,
+    "precision": 0,
+    "recall": 0,
+    "f1_score": 0,
+    "accuracy": 0,
+    "specificity": 0,
+    "false_positive_rate": 0
+  },
+  "resource_metrics": {
+    "tokens_used": 0,
+    "tokens_wasted": 0,
+    "tokens_effective": 0,
+    "waste_percentage": 0,
+    "avg_tokens_per_iteration": 0,
+    "avg_tokens_per_success": 0,
+    "efficiency_trend": "stable",
+    "wasted_by_category": {}
+  },
+  "performance_metrics": {
+    "avg_response_time": 0,
+    "p50_response_time": 0,
+    "p95_response_time": 0,
+    "p99_response_time": 0,
+    "max_response_time": 0,
+    "min_response_time": 0,
+    "total_execution_time": 0,
+    "time_to_first_iteration": 0,
+    "time_to_completion": 0,
+    "overhead_time": 0
+  },
+  "success_metrics": {
+    "total_attempts": 0,
+    "successes": 0,
+    "failures": 0,
+    "blocked": 0,
+    "cancelled": 0,
+    "success_rate": 0,
+    "failure_rate": 0,
+    "avg_iterations_to_success": 0,
+    "avg_iterations_to_failure": 0,
+    "recovery_rate": 0,
+    "auto_correction_rate": 0
+  },
+  "mcp_source_reputation": {}
+}
