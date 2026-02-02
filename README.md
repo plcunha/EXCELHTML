@@ -256,6 +256,9 @@ downloadFile(blob, 'dados.xlsx')
 - ✅ Sanitização de inputs
 - ✅ Content Security Policy ready
 
+> **⚠️ Nota de Segurança**: A biblioteca `xlsx` (SheetJS) possui vulnerabilidades conhecidas sem correção disponível.
+> Para uso em produção com arquivos não confiáveis, considere validação adicional ou use a versão Pro do SheetJS.
+
 ## 📊 Performance
 
 - ⚡ Parsing otimizado com Web Workers (futuro)
