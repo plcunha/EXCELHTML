@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { cn, formatValue } from '@/lib/utils'
 import { useAppStore, useFilteredData } from '@/lib/store'
-import type { ColumnDefinition, DataRow, CellValue } from '@/types'
+import type { ColumnDefinition, CellValue } from '@/types'
 
 // ============================================
 // COMPONENTES DE CÉLULA ESPECIALIZADOS

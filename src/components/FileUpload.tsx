@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { cn, formatFileSize } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { parseFile, processData } from '@/lib/excel-parser'
 import { useAppStore } from '@/lib/store'
 

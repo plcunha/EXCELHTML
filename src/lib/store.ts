@@ -217,7 +217,7 @@ export const useAppStore = create<AppState>()(
       })),
       
       deleteSchema: (schemaId) => set((state) => {
-        const { [schemaId]: _, ...rest } = state.savedSchemas
+        const { [schemaId]: _deleted, ...rest } = state.savedSchemas
         return { savedSchemas: rest }
       }),
       

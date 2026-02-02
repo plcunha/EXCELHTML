@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { generateSchemaFromData, processData, exportData } from '@/lib/excel-parser'
 import type { ParseResult } from '@/lib/excel-parser'
 
