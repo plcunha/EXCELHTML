@@ -8,22 +8,22 @@ const mockData: ProcessedData = {
     id: 'test-schema',
     name: 'Test Data',
     columns: [
-      { key: 'id', label: 'ID', type: 'string', format: { type: 'text' }, sortable: true, searchable: true },
-      { key: 'name', label: 'Nome', type: 'string', format: { type: 'text' }, sortable: true, searchable: true },
-      { key: 'price', label: 'Preço', type: 'number', format: { type: 'currency', currency: 'BRL' }, sortable: true, searchable: false },
-      { key: 'active', label: 'Ativo', type: 'boolean', format: { type: 'boolean' }, sortable: false, searchable: false },
-      { key: 'progress', label: 'Progresso', type: 'number', format: { type: 'progress' }, sortable: true, searchable: false },
+      { key: 'id', label: 'ID', format: { type: 'string' }, sortable: true, searchable: true },
+      { key: 'name', label: 'Nome', format: { type: 'string' }, sortable: true, searchable: true },
+      { key: 'price', label: 'Preço', format: { type: 'currency', currency: 'BRL' }, sortable: true, searchable: false },
+      { key: 'active', label: 'Ativo', format: { type: 'boolean' }, sortable: false, searchable: false },
+      { key: 'progress', label: 'Progresso', format: { type: 'progress' }, sortable: true, searchable: false },
     ],
   },
   rows: [
-    { _id: 'row-1', id: '001', name: 'Item A', price: 100, active: true, progress: 50 },
-    { _id: 'row-2', id: '002', name: 'Item B', price: 200, active: false, progress: 75 },
-    { _id: 'row-3', id: '003', name: 'Item C', price: 300, active: true, progress: 100 },
+    { _id: 'row-1', _rowIndex: 0, id: '001', name: 'Item A', price: 100, active: true, progress: 50 },
+    { _id: 'row-2', _rowIndex: 1, id: '002', name: 'Item B', price: 200, active: false, progress: 75 },
+    { _id: 'row-3', _rowIndex: 2, id: '003', name: 'Item C', price: 300, active: true, progress: 100 },
   ],
   metadata: {
     totalRows: 3,
-    createdAt: new Date().toISOString(),
-    source: 'test',
+    processedAt: new Date(),
+    sourceFileName: 'test.xlsx',
   },
 }
 
