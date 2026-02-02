@@ -15,6 +15,13 @@ import {
   LineChart,
   Line,
   Legend,
+  AreaChart,
+  Area,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
 } from 'recharts'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
@@ -71,14 +78,41 @@ export function Charts({ className }: ChartsProps) {
       }),
     } : null
     
-    return { barData, pieData, lineData }
+    // Dados para gráfico de área (mesmo formato que linha, mas com preenchimento)
+    const areaData = numericColumns.length >= 1 ? {
+      column: numericColumns[0],
+      data: data.rows.slice(0, 15).map((row, i) => ({
+        name: `${i + 1}`,
+        value: Number(row[numericColumns[0].key]) || 0,
+      })),
+    } : null
+    
+    // Dados para gráfico radar (comparação multidimensional)
+    const radarData = numericColumns.length >= 3 ? {
+      columns: numericColumns.slice(0, 5),
+      data: numericColumns.slice(0, 5).map(col => {
+        // Calcula média da coluna para o radar
+        const values = data.rows.map(row => Number(row[col.key]) || 0)
+        const avg = values.reduce((a, b) => a + b, 0) / values.length
+        const max = Math.max(...values)
+        // Normaliza para porcentagem
+        const normalized = max > 0 ? (avg / max) * 100 : 0
+        return {
+          subject: col.label,
+          value: Math.round(normalized),
+          fullMark: 100,
+        }
+      }),
+    } : null
+    
+    return { barData, pieData, lineData, areaData, radarData }
   }, [data])
   
   if (!data || !chartData) {
     return null
   }
   
-  const { barData, pieData, lineData } = chartData
+  const { barData, pieData, lineData, areaData, radarData } = chartData
   
   // Se não há dados suficientes para gráficos
   if (!barData && !pieData) {
@@ -159,7 +193,7 @@ export function Charts({ className }: ChartsProps) {
       
       {/* Gráfico de Linha */}
       {lineData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4 md:col-span-2">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">
             Comparativo
           </h3>
@@ -191,6 +225,87 @@ export function Charts({ className }: ChartsProps) {
                   />
                 ))}
               </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+      
+      {/* Gráfico de Área */}
+      {areaData && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            Tendência: {areaData.column.label}
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={areaData.data}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorValue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+      
+      {/* Gráfico Radar */}
+      {radarData && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            Análise Multidimensional
+          </h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData.data}>
+                <PolarGrid stroke="#e5e7eb" />
+                <PolarAngleAxis 
+                  dataKey="subject" 
+                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                />
+                <PolarRadiusAxis 
+                  angle={30} 
+                  domain={[0, 100]} 
+                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                />
+                <Radar
+                  name="Média"
+                  dataKey="value"
+                  stroke="#06b6d4"
+                  fill="#06b6d4"
+                  fillOpacity={0.5}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }}
+                  formatter={(value: number) => [`${value}%`, 'Média Normalizada']}
+                />
+              </RadarChart>
             </ResponsiveContainer>
           </div>
         </div>
