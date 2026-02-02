@@ -439,5 +439,4 @@ function CompanySwitcher() {
 
 - Adicionar autenticação para salvar schemas por usuário
 - Implementar Web Workers para processamento de arquivos grandes
-- Adicionar mais tipos de gráficos (área, radar, etc.)
 - Criar modo de edição de dados inline

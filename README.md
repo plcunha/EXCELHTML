@@ -10,7 +10,7 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
 
 - 📤 **Upload Drag & Drop** - Suporte a XLSX, XLS e CSV
 - 📊 **Tabelas Interativas** - Ordenação, filtros, busca e paginação
-- 📈 **Gráficos Dinâmicos** - Barras, pizza e linhas automáticos
+- 📈 **Gráficos Dinâmicos** - Barras, pizza, linhas, área e radar automáticos
 - 🎨 **Temas Customizáveis** - Sistema de temas por empresa
 - 🌙 **Dark Mode** - Suporte nativo a modo escuro
 - 📱 **Responsivo** - Funciona em qualquer dispositivo
