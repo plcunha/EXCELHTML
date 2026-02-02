@@ -108,6 +108,14 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+        aria-describedby="upload-instructions"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            document.getElementById('file-upload-input')?.click()
+          }
+        }}
         className={cn(
           'relative border-2 border-dashed rounded-xl p-8 transition-all duration-300',
           'flex flex-col items-center justify-center text-center',
@@ -124,6 +132,8 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={uploadProgress.status === 'processing'}
+          aria-label="Selecionar arquivo Excel ou CSV para upload"
+          id="file-upload-input"
         />
         
         {/* Ícone e texto */}
@@ -148,7 +158,7 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <FileSpreadsheet className="w-4 h-4" />
-                <span>Suporta: XLSX, XLS, CSV (máx. 50MB)</span>
+                <span id="upload-instructions">Suporta: XLSX, XLS, CSV (máx. 50MB)</span>
               </div>
             </>
           )}
