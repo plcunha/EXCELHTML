@@ -15,7 +15,8 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
 - 🌙 **Dark Mode** - Suporte nativo a modo escuro
 - 📱 **Responsivo** - Funciona em qualquer dispositivo
 - 🔒 **Seguro** - Headers de segurança e validação de arquivos
-- ⚡ **Rápido** - Processamento no cliente, sem envio de dados
+- ⚡ **Rápido** - Web Workers para parsing assíncrono + processamento no cliente
+- ⌨️ **Atalhos de Teclado** - Navegação rápida (Shift+? para ver todos)
 
 ## 🚀 Início Rápido
 
@@ -261,7 +262,8 @@ downloadFile(blob, 'dados.xlsx')
 
 ## 📊 Performance
 
-- ⚡ Parsing otimizado com Web Workers (futuro)
+- ⚡ Parsing otimizado com Web Workers para arquivos grandes
+- ⚡ Barra de progresso em tempo real durante processamento
 - ⚡ Virtualização de tabelas para grandes datasets
 - ⚡ Lazy loading de gráficos
 - ⚡ Memoização de cálculos pesados
