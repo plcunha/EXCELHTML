@@ -1,10 +1,11 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { parseFile, processData } from '@/lib/excel-parser'
+import { processData } from '@/lib/excel-parser'
 import { useAppStore } from '@/lib/store'
+import { useExcelWorker, type ParseProgress } from '@/lib/useExcelWorker'
 
 interface FileUploadProps {
   onUploadComplete?: () => void
@@ -17,12 +18,26 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
     status: 'idle' | 'processing' | 'success' | 'error'
     message?: string
     fileName?: string
+    progress?: number
+    stage?: ParseProgress['stage']
   }>({ status: 'idle' })
   
   const { setData, setLoading, setError } = useAppStore()
   
+  // Use Web Worker for parsing when available
+  const { parseFile, isWorkerSupported } = useExcelWorker({
+    onProgress: (progress) => {
+      setUploadProgress(prev => ({
+        ...prev,
+        progress: progress.progress,
+        message: progress.message,
+        stage: progress.stage
+      }))
+    }
+  })
+  
   const processFile = useCallback(async (file: File) => {
-    setUploadProgress({ status: 'processing', fileName: file.name })
+    setUploadProgress({ status: 'processing', fileName: file.name, progress: 0 })
     setLoading(true)
     
     try {
@@ -46,7 +61,7 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
         throw new Error('Arquivo muito grande. Máximo: 50MB')
       }
       
-      // Parse do arquivo
+      // Parse do arquivo usando Web Worker quando disponível
       const parseResult = await parseFile(file)
       
       if (parseResult.errors.length > 0) {
@@ -66,7 +81,8 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
       setUploadProgress({ 
         status: 'success', 
         fileName: file.name,
-        message: `${processed.rows.length} linhas carregadas` 
+        message: `${processed.rows.length} linhas carregadas${isWorkerSupported ? ' ⚡' : ''}`,
+        progress: 100
       })
       
       onUploadComplete?.()
@@ -83,7 +99,7 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
     } finally {
       setLoading(false)
     }
-  }, [setData, setLoading, setError, onUploadComplete])
+  }, [setData, setLoading, setError, onUploadComplete, parseFile, isWorkerSupported])
   
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -168,13 +184,28 @@ export function FileUpload({ onUploadComplete, className }: FileUploadProps) {
               <div className="w-16 h-16 rounded-full flex items-center justify-center bg-primary-100 animate-pulse">
                 <FileSpreadsheet className="w-8 h-8 text-primary-600" />
               </div>
-              <div>
-                <p className="text-lg font-semibold text-gray-700">
+              <div className="w-full max-w-xs">
+                <p className="text-lg font-semibold text-gray-700 flex items-center justify-center gap-2">
                   Processando...
+                  {isWorkerSupported && (
+                    <span className="inline-flex items-center gap-1 text-xs font-normal text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
+                      <Zap className="w-3 h-3" />
+                      Worker
+                    </span>
+                  )}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {uploadProgress.fileName}
+                  {uploadProgress.message || uploadProgress.fileName}
                 </p>
+                {/* Progress bar */}
+                {typeof uploadProgress.progress === 'number' && (
+                  <div className="mt-3 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-primary-500 h-full rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress.progress}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}
