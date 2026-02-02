@@ -128,6 +128,7 @@ function ImageCell({ value }: CellProps) {
   return (
     <div className="flex items-center justify-center">
       {url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Dynamic external URLs from Excel data
         <img
           src={url}
           alt=""

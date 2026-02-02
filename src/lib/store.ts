@@ -217,7 +217,8 @@ export const useAppStore = create<AppState>()(
       })),
       
       deleteSchema: (schemaId) => set((state) => {
-        const { [schemaId]: _deleted, ...rest } = state.savedSchemas
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [schemaId]: _removed, ...rest } = state.savedSchemas
         return { savedSchemas: rest }
       }),
       

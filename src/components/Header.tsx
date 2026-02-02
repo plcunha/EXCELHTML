@@ -36,6 +36,7 @@ export function Header({ className }: HeaderProps) {
         {/* Logo e nome */}
         <div className="flex items-center gap-3">
           {company.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Dynamic company logo from config
             <img 
               src={isDarkMode && company.logoLight ? company.logoLight : company.logo} 
               alt={company.name}
