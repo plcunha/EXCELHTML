@@ -415,49 +415,52 @@ export function DataTable({ className }: DataTableProps) {
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr
-                  key={row._id}
-                  className={cn(
-                    'hover:bg-gray-50/50 transition-colors',
-                    isEditMode && 'hover:bg-primary-50/30'
-                  )}
-                >
-                  {visibleColumns.map((column) => {
-                    const isThisCellEditing = editingCell?.rowId === row._id && editingCell?.columnKey === column.key
-                    const isEditableType = !['image', 'url', 'email', 'phone'].includes(column.format.type)
-                    
-                    return (
-                      <td
-                        key={`${row._id}-${column.key}`}
-                        className={cn(
-                          'px-4 py-3 text-sm text-gray-700',
-                          column.align === 'center' && 'text-center',
-                          column.align === 'right' && 'text-right',
-                          column.sticky === 'left' && 'sticky left-0 bg-white z-10',
-                          column.sticky === 'right' && 'sticky right-0 bg-white z-10',
-                          isEditMode && isEditableType && 'cursor-pointer hover:bg-primary-50',
-                          isThisCellEditing && 'p-1',
-                        )}
-                      >
-                        {isEditMode && isEditableType ? (
-                          <EditableCell
-                            rowId={row._id}
-                            value={row[column.key]}
-                            column={column}
-                            isEditing={isThisCellEditing}
-                            onStartEdit={() => setEditingCell({ rowId: row._id, columnKey: column.key })}
-                            onSave={(value) => updateCell(row._id, column.key, value)}
-                            onCancel={() => setEditingCell(null)}
-                          />
-                        ) : (
-                          <TableCell value={row[column.key]} column={column} />
-                        )}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))
+              rows.map((row) => {
+                const rowId = row._id as string
+                return (
+                  <tr
+                    key={rowId}
+                    className={cn(
+                      'hover:bg-gray-50/50 transition-colors',
+                      isEditMode && 'hover:bg-primary-50/30'
+                    )}
+                  >
+                    {visibleColumns.map((column) => {
+                      const isThisCellEditing = editingCell?.rowId === rowId && editingCell?.columnKey === column.key
+                      const isEditableType = !['image', 'url', 'email', 'phone'].includes(column.format.type)
+                      
+                      return (
+                        <td
+                          key={`${rowId}-${column.key}`}
+                          className={cn(
+                            'px-4 py-3 text-sm text-gray-700',
+                            column.align === 'center' && 'text-center',
+                            column.align === 'right' && 'text-right',
+                            column.sticky === 'left' && 'sticky left-0 bg-white z-10',
+                            column.sticky === 'right' && 'sticky right-0 bg-white z-10',
+                            isEditMode && isEditableType && 'cursor-pointer hover:bg-primary-50',
+                            isThisCellEditing && 'p-1',
+                          )}
+                        >
+                          {isEditMode && isEditableType ? (
+                            <EditableCell
+                              rowId={rowId}
+                              value={row[column.key] as CellValue}
+                              column={column}
+                              isEditing={isThisCellEditing}
+                              onStartEdit={() => setEditingCell({ rowId, columnKey: column.key })}
+                              onSave={(value) => updateCell(rowId, column.key, value)}
+                              onCancel={() => setEditingCell(null)}
+                            />
+                          ) : (
+                            <TableCell value={row[column.key] as CellValue} column={column} />
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

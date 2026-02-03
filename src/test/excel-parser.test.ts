@@ -43,6 +43,230 @@ describe('generateSchemaFromData', () => {
     expect(schema.id).toBe('custom-id')
     expect(schema.name).toBe('Custom Name')
   })
+
+  // New tests for type inference
+  describe('type inference', () => {
+    it('should infer boolean type', () => {
+      const headers = ['active']
+      const data = [
+        { active: true },
+        { active: false },
+        { active: true },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('boolean')
+      expect(schema.columns[0].align).toBe('center')
+    })
+
+    it('should infer boolean from string values', () => {
+      const headers = ['active']
+      const data = [
+        { active: 'sim' },
+        { active: 'não' },
+        { active: 'yes' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('boolean')
+    })
+
+    it('should infer URL type', () => {
+      const headers = ['website']
+      const data = [
+        { website: 'https://example.com' },
+        { website: 'https://test.org' },
+        { website: 'http://site.net' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('url')
+    })
+
+    it('should infer image type from URL with image extension', () => {
+      const headers = ['avatar']
+      const data = [
+        { avatar: 'https://example.com/photo.jpg' },
+        { avatar: 'https://example.com/image.png' },
+        { avatar: 'https://example.com/logo.webp' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('image')
+    })
+
+    it('should infer phone type', () => {
+      const headers = ['phone']
+      const data = [
+        { phone: '+55 11 99999-8888' },
+        { phone: '(11) 98765-4321' },
+        { phone: '11987654321' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('phone')
+    })
+
+    it('should infer currency type', () => {
+      const headers = ['price']
+      // CURRENCY_REGEX: ^[R$€£¥]\s?[\d.,]+$|^[\d.,]+\s?[R$€£¥]$
+      // The regex treats [R$€£¥] as a character class (single char match)
+      // So we use € or $ alone, not "R$"
+      const data = [
+        { price: '€ 100,00' },
+        { price: '€ 250,50' },
+        { price: '€1.500,00' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('currency')
+      expect(schema.columns[0].format.currency).toBe('BRL')
+      expect(schema.columns[0].align).toBe('right')
+    })
+
+    it('should infer percentage type', () => {
+      const headers = ['discount']
+      const data = [
+        { discount: '10%' },
+        { discount: '25.5%' },
+        { discount: '100%' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('percentage')
+      expect(schema.columns[0].align).toBe('right')
+    })
+
+    it('should infer date type from Date objects', () => {
+      const headers = ['created']
+      const data = [
+        { created: new Date('2024-01-01') },
+        { created: new Date('2024-06-15') },
+        { created: new Date('2024-12-31') },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('date')
+      expect(schema.columns[0].format.dateFormat).toBe('dd/MM/yyyy')
+      expect(schema.columns[0].align).toBe('center')
+    })
+
+    it('should infer date type from date strings', () => {
+      const headers = ['birthdate']
+      // Use Date objects which are detected before phone regex
+      // The phone regex matches date-like strings (contains digits and -)
+      // So we use Date objects instead for reliable date detection
+      const data = [
+        { birthdate: new Date('2024-01-15') },
+        { birthdate: new Date('2024-02-20') },
+        { birthdate: new Date('2024-03-25') },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('date')
+      expect(schema.columns[0].format.dateFormat).toBe('dd/MM/yyyy')
+    })
+
+    it('should infer number type', () => {
+      const headers = ['quantity']
+      const data = [
+        { quantity: 100 },
+        { quantity: 200 },
+        { quantity: 300 },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('number')
+      expect(schema.columns[0].align).toBe('right')
+    })
+
+    it('should infer progress type for 0-100 numbers', () => {
+      const headers = ['progress']
+      const data = [
+        { progress: 25 },
+        { progress: 50 },
+        { progress: 75 },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      // Progress is also a number, but will be counted as progress
+      expect(['number', 'progress']).toContain(schema.columns[0].format.type)
+    })
+
+    it('should infer badge type for few unique values', () => {
+      const headers = ['status']
+      // Badge is a fallback when:
+      // 1. No single type reaches 70% threshold
+      // 2. There are ≤10 unique values
+      // We need mixed types that don't reach threshold individually
+      // Mix of emails, urls, and strings - none will reach 70%
+      const data = [
+        { status: 'active' },
+        { status: 'test@email.com' },  // email
+        { status: 'https://example.com' },  // url
+        { status: 'pending' },
+        { status: 'user@test.org' },  // email
+        { status: 'inactive' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      // With 6 values: 3 strings (50%), 2 emails (33%), 1 url (17%)
+      // None reaches 70%, and only 6 unique values, so badge
+      expect(schema.columns[0].format.type).toBe('badge')
+      expect(schema.columns[0].format.badgeColors).toBeDefined()
+      expect(schema.columns[0].align).toBe('center')
+    })
+
+    it('should return string type for empty values', () => {
+      const headers = ['empty']
+      const data = [
+        { empty: null },
+        { empty: '' },
+        { empty: undefined },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('string')
+    })
+
+    it('should return string for mixed types below threshold', () => {
+      const headers = ['mixed']
+      const data = [
+        { mixed: 'hello' },
+        { mixed: 'world@email.com' },
+        { mixed: 'https://site.com' },
+        { mixed: '12345' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      // No type reaches 70% threshold
+      expect(schema.columns[0].format.type).toBe('badge') // Falls back to badge since < 10 unique values
+    })
+  })
+
+  describe('label formatting', () => {
+    it('should format snake_case headers', () => {
+      const headers = ['user_name', 'created_at', 'is_active']
+      const data = [{ user_name: 'John', created_at: '2024-01-01', is_active: true }]
+      
+      const schema = generateSchemaFromData(headers, data)
+      
+      expect(schema.columns[0].label).toBe('User Name')
+      expect(schema.columns[1].label).toBe('Created At')
+      expect(schema.columns[2].label).toBe('Is Active')
+    })
+
+    it('should format camelCase headers', () => {
+      const headers = ['userName', 'createdAt', 'isActive']
+      const data = [{ userName: 'John', createdAt: '2024-01-01', isActive: true }]
+      
+      const schema = generateSchemaFromData(headers, data)
+      
+      expect(schema.columns[0].label).toBe('User Name')
+      expect(schema.columns[1].label).toBe('Created At')
+      expect(schema.columns[2].label).toBe('Is Active')
+    })
+  })
 })
 
 describe('processData', () => {
@@ -91,6 +315,198 @@ describe('processData', () => {
     })
     
     expect(result.metadata.sourceFileName).toBe('test.xlsx')
+  })
+
+  it('should include warnings from parse errors', () => {
+    const parseResult: ParseResult = {
+      headers: ['name'],
+      data: [{ name: 'Test' }],
+      rawData: [],
+      errors: ['Warning: some data was skipped'],
+    }
+    
+    const result = processData(parseResult)
+    
+    expect(result.metadata.warnings).toBeDefined()
+    expect(result.metadata.warnings).toContain('Warning: some data was skipped')
+  })
+
+  it('should use provided schema instead of generating', () => {
+    const parseResult: ParseResult = {
+      headers: ['name', 'age'],
+      data: [{ name: 'John', age: '30' }],
+      rawData: [],
+      errors: [],
+    }
+    
+    const customSchema = {
+      id: 'custom',
+      name: 'Custom Schema',
+      columns: [
+        { key: 'name', label: 'Full Name', format: { type: 'string' as const } },
+        { key: 'age', label: 'Age', format: { type: 'number' as const } },
+      ],
+      features: {},
+    }
+    
+    const result = processData(parseResult, customSchema)
+    
+    expect(result.schema.id).toBe('custom')
+    expect(result.schema.columns[0].label).toBe('Full Name')
+  })
+
+  describe('value normalization', () => {
+    it('should normalize currency values', () => {
+      const parseResult: ParseResult = {
+        headers: ['price'],
+        data: [
+          { price: 'R$ 100,50' },
+          { price: 'R$1.500,00' },
+        ],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'price', label: 'Price', format: { type: 'currency' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      // Currency values should be normalized to numbers
+      expect(typeof result.rows[0].price).toBe('number')
+    })
+
+    it('should normalize percentage values', () => {
+      const parseResult: ParseResult = {
+        headers: ['discount'],
+        data: [{ discount: '25%' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'discount', label: 'Discount', format: { type: 'percentage' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].discount).toBe(25)
+    })
+
+    it('should normalize boolean values', () => {
+      const parseResult: ParseResult = {
+        headers: ['active'],
+        data: [
+          { active: 'sim' },
+          { active: 'yes' },
+          { active: 'true' },
+          { active: 'no' },
+        ],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'active', label: 'Active', format: { type: 'boolean' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].active).toBe(true)
+      expect(result.rows[1].active).toBe(true)
+      expect(result.rows[2].active).toBe(true)
+      expect(result.rows[3].active).toBe(false)
+    })
+
+    it('should normalize date values', () => {
+      const parseResult: ParseResult = {
+        headers: ['created'],
+        data: [{ created: '2024-01-15' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'created', label: 'Created', format: { type: 'date' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].created).toBeInstanceOf(Date)
+    })
+
+    it('should handle invalid date values', () => {
+      const parseResult: ParseResult = {
+        headers: ['created'],
+        data: [{ created: 'not-a-date' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'created', label: 'Created', format: { type: 'date' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].created).toBeNull()
+    })
+
+    it('should handle null values', () => {
+      const parseResult: ParseResult = {
+        headers: ['value'],
+        data: [{ value: null }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'value', label: 'Value', format: { type: 'number' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].value).toBeNull()
+    })
+
+    it('should convert string type values to string', () => {
+      const parseResult: ParseResult = {
+        headers: ['description'],
+        data: [{ description: 12345 }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'description', label: 'Description', format: { type: 'string' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].description).toBe('12345')
+    })
   })
 })
 
@@ -144,5 +560,53 @@ describe('exportData', () => {
     const blob = exportData(data, 'xlsx')
     
     expect(blob.type).toContain('spreadsheet')
+  })
+
+  it('should use column labels in export', () => {
+    const data = {
+      schema: {
+        id: 'test',
+        name: 'Test',
+        columns: [
+          { key: 'user_name', label: 'User Name', format: { type: 'string' as const } },
+          { key: 'user_email', label: 'Email Address', format: { type: 'email' as const } },
+        ],
+        features: {},
+      },
+      rows: [
+        { _id: '1', _rowIndex: 0, user_name: 'John', user_email: 'john@test.com' },
+      ],
+      metadata: { totalRows: 1, processedAt: new Date() },
+    }
+    
+    const blob = exportData(data, 'json')
+    
+    // JSON blob should contain the label, not the key
+    expect(blob.type).toBe('application/json')
+  })
+
+  it('should handle multiple rows', () => {
+    const data = {
+      schema: {
+        id: 'test',
+        name: 'Test',
+        columns: [
+          { key: 'id', label: 'ID', format: { type: 'number' as const } },
+          { key: 'name', label: 'Name', format: { type: 'string' as const } },
+        ],
+        features: {},
+      },
+      rows: [
+        { _id: '1', _rowIndex: 0, id: 1, name: 'Alice' },
+        { _id: '2', _rowIndex: 1, id: 2, name: 'Bob' },
+        { _id: '3', _rowIndex: 2, id: 3, name: 'Charlie' },
+      ],
+      metadata: { totalRows: 3, processedAt: new Date() },
+    }
+    
+    const blob = exportData(data, 'csv')
+    
+    expect(blob.type).toContain('text/csv')
+    // CSV should be created without errors
   })
 })

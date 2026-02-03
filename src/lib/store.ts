@@ -280,11 +280,13 @@ export const useAppStore = create<AppState>()(
 // ============================================
 
 /**
- * Hook para obter dados filtrados e paginados
+ * Pure function to get filtered and paginated data
+ * This can be tested without React hooks
  */
-export function useFilteredData() {
-  const { data, tableState } = useAppStore()
-  
+export function getFilteredData(
+  data: ProcessedData | null,
+  tableState: TableState
+): { rows: Record<string, CellValue>[]; totalFiltered: number } {
   if (!data) return { rows: [], totalFiltered: 0 }
   
   let filteredRows = [...data.rows]
@@ -366,4 +368,13 @@ export function useFilteredData() {
   const paginatedRows = filteredRows.slice(start, start + pageSize)
   
   return { rows: paginatedRows, totalFiltered }
+}
+
+/**
+ * Hook para obter dados filtrados e paginados
+ * Wrapper around getFilteredData that uses the store
+ */
+export function useFilteredData() {
+  const { data, tableState } = useAppStore()
+  return getFilteredData(data, tableState)
 }

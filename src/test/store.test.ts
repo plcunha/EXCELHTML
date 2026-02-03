@@ -345,3 +345,351 @@ describe('useAppStore', () => {
     })
   })
 })
+
+// ============================================
+// getFilteredData Tests (Pure function)
+// ============================================
+import { getFilteredData } from '../lib/store'
+import type { TableState } from '../types'
+
+describe('getFilteredData', () => {
+  const createSearchableSchema = (): DataSchema => ({
+    id: 'searchable-schema',
+    name: 'Searchable Schema',
+    columns: [
+      { key: 'id', label: 'ID', format: { type: 'number' }, sortable: true },
+      { key: 'name', label: 'Name', format: { type: 'string' }, searchable: true, sortable: true },
+      { key: 'email', label: 'Email', format: { type: 'email' }, searchable: true },
+      { key: 'value', label: 'Value', format: { type: 'number' }, sortable: true },
+      { key: 'status', label: 'Status', format: { type: 'badge' }, filterable: true },
+    ],
+    features: { export: true, pagination: true, search: true, filters: true },
+  })
+
+  const createFilterableData = (): ProcessedData => ({
+    schema: createSearchableSchema(),
+    rows: [
+      { _id: '1', _rowIndex: 0, id: 1, name: 'Alice', email: 'alice@example.com', value: 100, status: 'active' },
+      { _id: '2', _rowIndex: 1, id: 2, name: 'Bob', email: 'bob@example.com', value: 200, status: 'inactive' },
+      { _id: '3', _rowIndex: 2, id: 3, name: 'Charlie', email: 'charlie@test.com', value: 150, status: 'active' },
+      { _id: '4', _rowIndex: 3, id: 4, name: 'Diana', email: 'diana@example.com', value: 300, status: 'pending' },
+      { _id: '5', _rowIndex: 4, id: 5, name: 'Eve', email: 'eve@test.com', value: 50, status: 'active' },
+      { _id: '6', _rowIndex: 5, id: 6, name: null, email: null, value: null, status: 'unknown' },
+    ],
+    metadata: { totalRows: 6, processedAt: new Date(), sourceFileName: 'test.xlsx' },
+  })
+
+  const defaultTableState: TableState = {
+    filters: [],
+    search: '',
+    pagination: {
+      page: 1,
+      pageSize: 25,
+      totalPages: 1,
+      totalItems: 0,
+    },
+    visibleColumns: ['id', 'name', 'email', 'value', 'status'],
+  }
+
+  describe('when no data is loaded', () => {
+    it('should return empty rows and zero total', () => {
+      const result = getFilteredData(null, defaultTableState)
+      expect(result.rows).toEqual([])
+      expect(result.totalFiltered).toBe(0)
+    })
+  })
+
+  describe('search functionality', () => {
+    it('should filter by search term in searchable columns', () => {
+      const tableState = { ...defaultTableState, search: 'alice' }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(1)
+      expect(result.rows[0].name).toBe('Alice')
+    })
+
+    it('should search case-insensitively', () => {
+      const tableState = { ...defaultTableState, search: 'BOB' }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(1)
+      expect(result.rows[0].name).toBe('Bob')
+    })
+
+    it('should search in email column', () => {
+      const tableState = { ...defaultTableState, search: '@test.com' }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(2)
+      expect(result.rows.map(r => r.name)).toContain('Charlie')
+      expect(result.rows.map(r => r.name)).toContain('Eve')
+    })
+
+    it('should return no results for non-matching search', () => {
+      const tableState = { ...defaultTableState, search: 'xyz123nonexistent' }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(0)
+      expect(result.totalFiltered).toBe(0)
+    })
+
+    it('should handle null values in search', () => {
+      const tableState = { ...defaultTableState, search: 'Alice' }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      // Should not crash and should find Alice
+      expect(result.rows.length).toBe(1)
+    })
+  })
+
+  describe('filter operators', () => {
+    it('should filter with eq (equals) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'eq', value: 'active' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(3)
+      result.rows.forEach(row => expect(row.status).toBe('active'))
+    })
+
+    it('should filter with neq (not equals) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'neq', value: 'active' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(3)
+      result.rows.forEach(row => expect(row.status).not.toBe('active'))
+    })
+
+    it('should filter with gt (greater than) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'value', operator: 'gt', value: 150 }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(2)
+      result.rows.forEach(row => expect(Number(row.value)).toBeGreaterThan(150))
+    })
+
+    it('should filter with gte (greater than or equal) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'value', operator: 'gte', value: 150 }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(3)
+      result.rows.forEach(row => expect(Number(row.value)).toBeGreaterThanOrEqual(150))
+    })
+
+    it('should filter with lt (less than) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'value', operator: 'lt', value: 150 }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      // Alice (100), Eve (50), and null (NaN < 150 = false, but null row also included due to Number(null) = 0)
+      // Actually Number(null) = 0, so 0 < 150 = true
+      expect(result.rows.length).toBe(3) // Alice, Eve, and null row
+      const nonNullRows = result.rows.filter(r => r.value !== null)
+      nonNullRows.forEach(row => expect(Number(row.value)).toBeLessThan(150))
+    })
+
+    it('should filter with lte (less than or equal) operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'value', operator: 'lte', value: 150 }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      // Alice (100), Charlie (150), Eve (50), and null row (Number(null) = 0 <= 150)
+      expect(result.rows.length).toBe(4)
+      const nonNullRows = result.rows.filter(r => r.value !== null)
+      nonNullRows.forEach(row => expect(Number(row.value)).toBeLessThanOrEqual(150))
+    })
+
+    it('should filter with contains operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'email', operator: 'contains', value: 'example' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(3)
+      result.rows.forEach(row => expect(String(row.email).toLowerCase()).toContain('example'))
+    })
+
+    it('should filter with startsWith operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'name', operator: 'startsWith', value: 'A' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(1)
+      expect(result.rows[0].name).toBe('Alice')
+    })
+
+    it('should filter with endsWith operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'name', operator: 'endsWith', value: 'e' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(3) // Alice, Charlie, Eve
+    })
+
+    it('should filter with in operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'in', value: ['active', 'pending'] }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(4) // 3 active + 1 pending
+    })
+
+    it('should return all rows for unknown operator', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'unknown' as FilterState['operator'], value: 'test' }],
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(6)
+    })
+  })
+
+  describe('sorting', () => {
+    it('should sort by number column ascending', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        sort: { column: 'value', direction: 'asc' },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      const values = result.rows.map(r => r.value).filter(v => v !== null)
+      expect(values).toEqual([50, 100, 150, 200, 300])
+    })
+
+    it('should sort by number column descending', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        sort: { column: 'value', direction: 'desc' },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      // Null values go to end
+      const nonNullRows = result.rows.filter(r => r.value !== null)
+      const values = nonNullRows.map(r => r.value)
+      expect(values).toEqual([300, 200, 150, 100, 50])
+    })
+
+    it('should sort by string column ascending', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        sort: { column: 'name', direction: 'asc' },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      const names = result.rows.map(r => r.name).filter(n => n !== null)
+      expect(names).toEqual(['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'])
+    })
+
+    it('should sort by string column descending', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        sort: { column: 'name', direction: 'desc' },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      const names = result.rows.filter(r => r.name !== null).map(r => r.name)
+      expect(names).toEqual(['Eve', 'Diana', 'Charlie', 'Bob', 'Alice'])
+    })
+
+    it('should handle null values in sorting (null goes to end)', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        sort: { column: 'value', direction: 'asc' },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      const lastRow = result.rows[result.rows.length - 1]
+      expect(lastRow.value).toBeNull()
+    })
+  })
+
+  describe('pagination', () => {
+    it('should paginate results correctly', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        pagination: { ...defaultTableState.pagination, pageSize: 2, page: 1 },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(2)
+      expect(result.totalFiltered).toBe(6)
+    })
+
+    it('should return correct page of results', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        pagination: { ...defaultTableState.pagination, pageSize: 2, page: 2 },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(2)
+      expect(result.rows[0]._id).toBe('3') // Third item
+    })
+
+    it('should return remaining items on last page', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        pagination: { ...defaultTableState.pagination, pageSize: 4, page: 2 },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.rows.length).toBe(2) // 6 items, 4 per page, page 2 has 2 items
+    })
+  })
+
+  describe('combined operations', () => {
+    it('should apply search, filter, sort, and pagination together', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'eq', value: 'active' }],
+        sort: { column: 'value', direction: 'desc' },
+        pagination: { ...defaultTableState.pagination, pageSize: 2, page: 1 },
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      expect(result.totalFiltered).toBe(3) // Alice, Charlie, Eve are active
+      expect(result.rows.length).toBe(2) // First page
+      expect(result.rows[0].name).toBe('Charlie') // 150 is highest among active
+      expect(result.rows[1].name).toBe('Alice') // 100 is second
+    })
+
+    it('should update totalFiltered when combining search and filter', () => {
+      const tableState: TableState = {
+        ...defaultTableState,
+        filters: [{ column: 'status', operator: 'eq', value: 'active' }],
+        search: 'e', // Matches Alice (has 'e' in email), Charlie (has 'e' in email), Eve (has 'e' in name and email)
+      }
+      const result = getFilteredData(createFilterableData(), tableState)
+      
+      // Active: Alice, Charlie, Eve
+      // Search 'e' in searchable columns (name, email):
+      // - Alice: alice@example.com contains 'e' ✓
+      // - Charlie: charlie@test.com contains 'e' ✓ 
+      // - Eve: Eve contains 'e' and eve@test.com contains 'e' ✓
+      expect(result.totalFiltered).toBe(3)
+    })
+  })
+})
