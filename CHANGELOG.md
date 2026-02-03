@@ -16,8 +16,10 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Skip links para acessibilidade (pular para conteúdo principal e navegação)
 - ARIA labels e roles semânticos em todos os componentes principais
 - Suporte a leitores de tela com `aria-live` para estados de loading e erro
-- **208 testes unitários** cobrindo store, excel-parser, utils, config e keyboard shortcuts
-- **86% de cobertura de código** com testes abrangentes
+- **225 testes unitários** cobrindo store, excel-parser, utils, config e keyboard shortcuts
+- **93% de cobertura de código** com testes abrangentes
+- Testes para datetime normalization, schema features, progress alignment
+- Testes para CSV parsing e exportação de dados
 
 ### Alterado
 - Corrigido deprecation warning de `substr` para `substring` em `excel-parser.ts`
