@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateSchemaFromData, processData, exportData } from '@/lib/excel-parser'
+import { generateSchemaFromData, processData, exportData, parseFile } from '@/lib/excel-parser'
 import type { ParseResult } from '@/lib/excel-parser'
 
 describe('generateSchemaFromData', () => {
@@ -608,5 +608,53 @@ describe('exportData', () => {
     
     expect(blob.type).toContain('text/csv')
     // CSV should be created without errors
+  })
+})
+
+describe('parseFile', () => {
+  it('should return error for unsupported file type', async () => {
+    const file = new File(['test content'], 'test.txt', { type: 'text/plain' })
+    
+    const result = await parseFile(file)
+    
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]).toContain('não suportado')
+    expect(result.headers).toHaveLength(0)
+    expect(result.data).toHaveLength(0)
+  })
+
+  it('should parse CSV files', async () => {
+    const csvContent = 'name,age,email\nJohn,30,john@test.com\nJane,25,jane@test.com'
+    const file = new File([csvContent], 'test.csv', { type: 'text/csv' })
+    
+    const result = await parseFile(file)
+    
+    expect(result.errors).toHaveLength(0)
+    expect(result.headers).toContain('name')
+    expect(result.headers).toContain('age')
+    expect(result.headers).toContain('email')
+    expect(result.data).toHaveLength(2)
+    expect(result.data[0].name).toBe('John')
+    expect(result.data[1].name).toBe('Jane')
+  })
+
+  it('should handle CSV with different delimiters', async () => {
+    const csvContent = 'product,price\nWidget,100\nGadget,250'
+    const file = new File([csvContent], 'products.csv', { type: 'text/csv' })
+    
+    const result = await parseFile(file)
+    
+    expect(result.headers).toContain('product')
+    expect(result.headers).toContain('price')
+    expect(result.data[0].product).toBe('Widget')
+  })
+
+  it('should handle empty CSV', async () => {
+    const csvContent = ''
+    const file = new File([csvContent], 'empty.csv', { type: 'text/csv' })
+    
+    const result = await parseFile(file)
+    
+    expect(result.data).toHaveLength(0)
   })
 })
