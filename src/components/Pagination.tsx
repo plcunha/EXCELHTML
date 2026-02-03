@@ -18,15 +18,15 @@ export function Pagination({ className }: PaginationProps) {
   const { page, pageSize } = tableState.pagination
   const totalPages = Math.ceil(totalFiltered / pageSize)
   
-  if (totalFiltered === 0) return null
-  
-  const paginationRange = getPaginationRange(page, totalPages)
-  
   const handlePageChange = useCallback((newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage)
     }
   }, [totalPages, setPage])
+  
+  if (totalFiltered === 0) return null
+  
+  const paginationRange = getPaginationRange(page, totalPages)
   
   return (
     <nav 

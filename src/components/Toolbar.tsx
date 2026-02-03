@@ -11,7 +11,7 @@ import {
   Pencil,
   PencilOff
 } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { exportData } from '@/lib/excel-parser'
@@ -53,7 +53,7 @@ export function Toolbar({ className }: ToolbarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
   
-  const handleExport = (format: 'xlsx' | 'csv' | 'json') => {
+  const handleExport = useCallback((format: 'xlsx' | 'csv' | 'json') => {
     if (!data) return
     
     const blob = exportData(data, format)
@@ -62,11 +62,31 @@ export function Toolbar({ className }: ToolbarProps) {
     
     downloadFile(blob, filename)
     setShowExportMenu(false)
-  }
+  }, [data])
   
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     window.print()
-  }
+  }, [])
+  
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value)
+  }, [setSearch])
+  
+  const handleClearSearch = useCallback(() => {
+    setSearch('')
+  }, [setSearch])
+  
+  const handleToggleColumnPicker = useCallback(() => {
+    setShowColumnPicker(prev => !prev)
+  }, [])
+  
+  const handleToggleExportMenu = useCallback(() => {
+    setShowExportMenu(prev => !prev)
+  }, [])
+  
+  const handleToggleEditMode = useCallback(() => {
+    setEditMode(!isEditMode)
+  }, [isEditMode, setEditMode])
   
   if (!data) return null
   
@@ -81,7 +101,7 @@ export function Toolbar({ className }: ToolbarProps) {
           type="text"
           placeholder="Buscar..."
           value={tableState.search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className={cn(
             'w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200',
             'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
@@ -90,7 +110,7 @@ export function Toolbar({ className }: ToolbarProps) {
         />
         {tableState.search && (
           <button
-            onClick={() => setSearch('')}
+            onClick={handleClearSearch}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             aria-label="Limpar busca"
           >
@@ -122,7 +142,7 @@ export function Toolbar({ className }: ToolbarProps) {
         {/* Seletor de colunas */}
         <div className="relative" ref={columnPickerRef}>
           <button
-            onClick={() => setShowColumnPicker(!showColumnPicker)}
+            onClick={handleToggleColumnPicker}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
               'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
@@ -165,7 +185,7 @@ export function Toolbar({ className }: ToolbarProps) {
         {/* Exportar */}
         <div className="relative" ref={exportMenuRef}>
           <button
-            onClick={() => setShowExportMenu(!showExportMenu)}
+            onClick={handleToggleExportMenu}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
               'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
@@ -219,7 +239,7 @@ export function Toolbar({ className }: ToolbarProps) {
         
         {/* Edit Mode Toggle */}
         <button
-          onClick={() => setEditMode(!isEditMode)}
+          onClick={handleToggleEditMode}
           className={cn(
             'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors',
             isEditMode 
