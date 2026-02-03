@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { cn, getPaginationRange } from '@/lib/utils'
 import { useAppStore, useFilteredData } from '@/lib/store'
@@ -21,11 +22,11 @@ export function Pagination({ className }: PaginationProps) {
   
   const paginationRange = getPaginationRange(page, totalPages)
   
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage)
     }
-  }
+  }, [totalPages, setPage])
   
   return (
     <nav 
