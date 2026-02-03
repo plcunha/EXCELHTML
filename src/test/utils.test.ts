@@ -9,7 +9,8 @@ import {
   debounce,
   throttle,
   stringToColor,
-  isValidUrl
+  isValidUrl,
+  downloadFile
 } from '@/lib/utils'
 
 describe('cn (className merge)', () => {
@@ -280,5 +281,42 @@ describe('formatValue - additional cases', () => {
   it('should use default format for unknown types', () => {
     const result = formatValue('test', { type: 'unknown' as never })
     expect(result).toBe('test')
+  })
+})
+
+describe('downloadFile', () => {
+  it('should create a download link and trigger click', () => {
+    // Mock DOM APIs
+    const mockClick = vi.fn()
+    const mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as unknown as Node)
+    const mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation(() => null as unknown as Node)
+    const mockCreateObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test-url')
+    const mockRevokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    
+    const mockElement = {
+      href: '',
+      download: '',
+      click: mockClick,
+    }
+    const mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue(mockElement as unknown as HTMLAnchorElement)
+    
+    const blob = new Blob(['test content'], { type: 'text/plain' })
+    downloadFile(blob, 'test.txt')
+    
+    expect(mockCreateObjectURL).toHaveBeenCalledWith(blob)
+    expect(mockCreateElement).toHaveBeenCalledWith('a')
+    expect(mockElement.href).toBe('blob:test-url')
+    expect(mockElement.download).toBe('test.txt')
+    expect(mockAppendChild).toHaveBeenCalled()
+    expect(mockClick).toHaveBeenCalled()
+    expect(mockRemoveChild).toHaveBeenCalled()
+    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url')
+    
+    // Cleanup mocks
+    mockCreateElement.mockRestore()
+    mockAppendChild.mockRestore()
+    mockRemoveChild.mockRestore()
+    mockCreateObjectURL.mockRestore()
+    mockRevokeObjectURL.mockRestore()
   })
 })
