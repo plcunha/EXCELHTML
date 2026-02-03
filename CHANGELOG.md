@@ -16,11 +16,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Skip links para acessibilidade (pular para conteúdo principal e navegação)
 - ARIA labels e roles semânticos em todos os componentes principais
 - Suporte a leitores de tela com `aria-live` para estados de loading e erro
+- **208 testes unitários** cobrindo store, excel-parser, utils, config e keyboard shortcuts
+- **86% de cobertura de código** com testes abrangentes
 
 ### Alterado
 - Corrigido deprecation warning de `substr` para `substring` em `excel-parser.ts`
 - Melhorada estrutura semântica HTML com `role="main"`, `role="banner"`, `role="contentinfo"`
 - Toggle de visualização agora usa padrão ARIA tabs (`role="tablist"`, `role="tab"`, `role="tabpanel"`)
+- Refatorado `useFilteredData` para extrair função pura `getFilteredData()` (melhor testabilidade)
+- Corrigidos erros TypeScript em `DataTable.tsx` (type assertions para CellValue)
 
 ---
 
