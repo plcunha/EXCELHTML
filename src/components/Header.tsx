@@ -26,12 +26,17 @@ export function Header({ className }: HeaderProps) {
   }, [isDarkMode, company.theme])
   
   return (
-    <header className={cn(
-      'sticky top-0 z-50 w-full',
-      'bg-white/80 backdrop-blur-lg border-b border-gray-200',
-      'dark:bg-gray-900/80 dark:border-gray-800',
-      className
-    )}>
+    <header 
+      id="main-nav"
+      className={cn(
+        'sticky top-0 z-50 w-full',
+        'bg-white/80 backdrop-blur-lg border-b border-gray-200',
+        'dark:bg-gray-900/80 dark:border-gray-800',
+        className
+      )}
+      role="banner"
+      aria-label="Cabeçalho principal"
+    >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo e nome */}
         <div className="flex items-center gap-3">

@@ -82,10 +82,14 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-6">
+      <main id="main-content" className="flex-1 container mx-auto px-4 py-6" role="main" aria-label="Conteúdo principal">
         {/* Estado de erro */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <div 
+            className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+            role="alert"
+            aria-live="assertive"
+          >
             <p className="text-red-700 dark:text-red-400">{error}</p>
           </div>
         )}
@@ -141,7 +145,11 @@ export default function HomePage() {
               <Toolbar className="flex-1" />
               
               {/* Toggle de modo de visualização */}
-              <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <div 
+                className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg"
+                role="tablist"
+                aria-label="Modo de visualização"
+              >
                 <button
                   onClick={() => setViewMode('table')}
                   className={cn(
@@ -150,8 +158,12 @@ export default function HomePage() {
                       ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   )}
+                  role="tab"
+                  aria-selected={viewMode === 'table'}
+                  aria-controls="view-panel"
+                  id="tab-table"
                 >
-                  <Table2 className="w-4 h-4" />
+                  <Table2 className="w-4 h-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Tabela</span>
                 </button>
                 <button
@@ -162,22 +174,32 @@ export default function HomePage() {
                       ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   )}
+                  role="tab"
+                  aria-selected={viewMode === 'charts'}
+                  aria-controls="view-panel"
+                  id="tab-charts"
                 >
-                  <BarChart3 className="w-4 h-4" />
+                  <BarChart3 className="w-4 h-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Gráficos</span>
                 </button>
               </div>
             </div>
             
             {/* Conteúdo principal */}
-            {viewMode === 'table' ? (
-              <>
-                <DataTable />
-                <Pagination />
-              </>
-            ) : (
-              <Charts />
-            )}
+            <div 
+              id="view-panel"
+              role="tabpanel"
+              aria-labelledby={viewMode === 'table' ? 'tab-table' : 'tab-charts'}
+            >
+              {viewMode === 'table' ? (
+                <>
+                  <DataTable />
+                  <Pagination />
+                </>
+              ) : (
+                <Charts />
+              )}
+            </div>
             
             {/* Upload adicional (compacto) */}
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
@@ -191,17 +213,30 @@ export default function HomePage() {
         
         {/* Estado de carregamento */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+          <div 
+            className="flex flex-col items-center justify-center py-16"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div 
+              className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"
+              aria-hidden="true"
+            />
             <p className="mt-4 text-gray-500 dark:text-gray-400">
               Processando arquivo...
             </p>
+            <span className="sr-only">Carregando, por favor aguarde...</span>
           </div>
         )}
       </main>
       
       {/* Footer */}
-      <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
+      <footer 
+        className="py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800"
+        role="contentinfo"
+        aria-label="Rodapé"
+      >
         <div className="flex items-center justify-center gap-4">
           <p>
             Excel Viewer © {new Date().getFullYear()} • 

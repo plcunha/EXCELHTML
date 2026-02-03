@@ -435,8 +435,8 @@ function CompanySwitcher() {
 }
 ```
 
-## Próximos Passos
+## Próximas Funcionalidades
 
 - Adicionar autenticação para salvar schemas por usuário
-- Implementar Web Workers para processamento de arquivos grandes
-- Criar modo de edição de dados inline
+- Implementar persistência de preferências no servidor
+- Suporte a múltiplas planilhas em um único arquivo

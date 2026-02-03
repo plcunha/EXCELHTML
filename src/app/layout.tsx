@@ -33,6 +33,33 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 dark:bg-gray-950 antialiased font-sans">
+        {/* Skip Links para acessibilidade */}
+        <a
+          href="#main-content"
+          className="
+            sr-only focus:not-sr-only
+            focus:fixed focus:top-4 focus:left-4 focus:z-[100]
+            focus:px-4 focus:py-2 focus:rounded-lg
+            focus:bg-primary-600 focus:text-white
+            focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+            font-medium text-sm
+          "
+        >
+          Pular para o conteúdo principal
+        </a>
+        <a
+          href="#main-nav"
+          className="
+            sr-only focus:not-sr-only
+            focus:fixed focus:top-4 focus:left-64 focus:z-[100]
+            focus:px-4 focus:py-2 focus:rounded-lg
+            focus:bg-primary-600 focus:text-white
+            focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+            font-medium text-sm
+          "
+        >
+          Pular para a navegação
+        </a>
         {children}
       </body>
     </html>
