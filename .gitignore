@@ -44,3 +44,6 @@ next-env.d.ts
 # Misc
 .vercel
 *.local
+
+# PLCODE session files
+.plcode/
