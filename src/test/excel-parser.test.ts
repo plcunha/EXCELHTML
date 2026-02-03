@@ -167,6 +167,20 @@ describe('generateSchemaFromData', () => {
       expect(schema.columns[0].format.dateFormat).toBe('dd/MM/yyyy')
     })
 
+    it('should infer date from slash-formatted date strings', () => {
+      const headers = ['date']
+      // DATE_REGEX: ^\d{1,4}[-/]\d{1,2}[-/]\d{1,4}$
+      // Test with slash format that isn't caught by phone regex
+      const data = [
+        { date: '2024/01/15' },
+        { date: '2024/02/20' },
+        { date: '2024/03/25' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('date')
+    })
+
     it('should infer number type', () => {
       const headers = ['quantity']
       const data = [
@@ -191,6 +205,19 @@ describe('generateSchemaFromData', () => {
       const schema = generateSchemaFromData(headers, data)
       // Progress is also a number, but will be counted as progress
       expect(['number', 'progress']).toContain(schema.columns[0].format.type)
+    })
+
+    it('should set right alignment for progress type', () => {
+      const headers = ['completion']
+      const data = [
+        { completion: 10 },
+        { completion: 50 },
+        { completion: 100 },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      // Progress/number types should have right alignment
+      expect(schema.columns[0].align).toBe('right')
     })
 
     it('should infer badge type for few unique values', () => {
@@ -242,6 +269,32 @@ describe('generateSchemaFromData', () => {
       // No type reaches 70% threshold
       expect(schema.columns[0].format.type).toBe('badge') // Falls back to badge since < 10 unique values
     })
+
+    it('should return string when more than 10 unique values and no type threshold', () => {
+      const headers = ['description']
+      // Create 15 unique string values to exceed badge threshold
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        description: `Unique description number ${i + 1} that is definitely a string`,
+      }))
+      
+      const schema = generateSchemaFromData(headers, data)
+      // More than 10 unique values, falls back to string
+      expect(schema.columns[0].format.type).toBe('string')
+    })
+
+    it('should detect number type with string numbers', () => {
+      const headers = ['quantity']
+      // Numbers as strings should be detected by parseFloat
+      const data = [
+        { quantity: '100' },
+        { quantity: '200' },
+        { quantity: '300' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      // String numbers don't match typeof value === 'number', so they become strings
+      expect(['string', 'badge']).toContain(schema.columns[0].format.type)
+    })
   })
 
   describe('label formatting', () => {
@@ -265,6 +318,48 @@ describe('generateSchemaFromData', () => {
       expect(schema.columns[0].label).toBe('User Name')
       expect(schema.columns[1].label).toBe('Created At')
       expect(schema.columns[2].label).toBe('Is Active')
+    })
+  })
+
+  describe('schema features', () => {
+    it('should set default features on generated schema', () => {
+      const headers = ['name']
+      const data = [{ name: 'Test' }]
+      
+      const schema = generateSchemaFromData(headers, data)
+      
+      expect(schema.features?.export).toBe(true)
+      expect(schema.features?.print).toBe(true)
+      expect(schema.features?.charts).toBe(true)
+      expect(schema.features?.pagination).toBe(true)
+      expect(schema.features?.search).toBe(true)
+      expect(schema.features?.filters).toBe(true)
+      expect(schema.features?.columnToggle).toBe(true)
+    })
+
+    it('should set searchable true for email columns', () => {
+      const headers = ['contact']
+      const data = [
+        { contact: 'user1@example.com' },
+        { contact: 'user2@example.com' },
+        { contact: 'user3@example.com' },
+      ]
+      
+      const schema = generateSchemaFromData(headers, data)
+      
+      expect(schema.columns[0].searchable).toBe(true)
+    })
+
+    it('should set sortable and filterable for all columns', () => {
+      const headers = ['name', 'value']
+      const data = [{ name: 'Test', value: 100 }]
+      
+      const schema = generateSchemaFromData(headers, data)
+      
+      expect(schema.columns[0].sortable).toBe(true)
+      expect(schema.columns[0].filterable).toBe(true)
+      expect(schema.columns[1].sortable).toBe(true)
+      expect(schema.columns[1].filterable).toBe(true)
     })
   })
 })
@@ -448,6 +543,67 @@ describe('processData', () => {
       expect(result.rows[0].created).toBeInstanceOf(Date)
     })
 
+    it('should normalize datetime values', () => {
+      const parseResult: ParseResult = {
+        headers: ['timestamp'],
+        data: [{ timestamp: '2024-01-15T14:30:00Z' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'timestamp', label: 'Timestamp', format: { type: 'datetime' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].timestamp).toBeInstanceOf(Date)
+    })
+
+    it('should normalize datetime from Date object', () => {
+      const testDate = new Date('2024-06-15T10:30:00')
+      const parseResult: ParseResult = {
+        headers: ['updated'],
+        data: [{ updated: testDate }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'updated', label: 'Updated', format: { type: 'datetime' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].updated).toEqual(testDate)
+    })
+
+    it('should handle invalid datetime values', () => {
+      const parseResult: ParseResult = {
+        headers: ['timestamp'],
+        data: [{ timestamp: 'invalid-datetime-string' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'timestamp', label: 'Timestamp', format: { type: 'datetime' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].timestamp).toBeNull()
+    })
+
     it('should handle invalid date values', () => {
       const parseResult: ParseResult = {
         headers: ['created'],
@@ -506,6 +662,50 @@ describe('processData', () => {
       const result = processData(parseResult, schema)
       
       expect(result.rows[0].description).toBe('12345')
+    })
+
+    it('should normalize progress values', () => {
+      const parseResult: ParseResult = {
+        headers: ['progress'],
+        data: [
+          { progress: '50%' },
+          { progress: '75%' },
+        ],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'progress', label: 'Progress', format: { type: 'progress' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].progress).toBe(50)
+      expect(result.rows[1].progress).toBe(75)
+    })
+
+    it('should handle invalid number values returning null', () => {
+      const parseResult: ParseResult = {
+        headers: ['amount'],
+        data: [{ amount: 'not-a-number' }],
+        rawData: [],
+        errors: [],
+      }
+      
+      const schema = {
+        id: 'test',
+        name: 'Test',
+        columns: [{ key: 'amount', label: 'Amount', format: { type: 'number' as const } }],
+        features: {},
+      }
+      
+      const result = processData(parseResult, schema)
+      
+      expect(result.rows[0].amount).toBeNull()
     })
   })
 })

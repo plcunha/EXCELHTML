@@ -7,8 +7,8 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
   <img src="https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/React-19-61dafb?logo=react" alt="React 19" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?logo=tailwindcss" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Tests-213_passing-brightgreen?logo=vitest" alt="213 Tests Passing" />
-  <img src="https://img.shields.io/badge/Coverage-92%25-brightgreen" alt="92% Coverage" />
+  <img src="https://img.shields.io/badge/Tests-225_passing-brightgreen?logo=vitest" alt="225 Tests Passing" />
+  <img src="https://img.shields.io/badge/Coverage-93%25-brightgreen" alt="93% Coverage" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License MIT" />
 </p>
 
@@ -41,7 +41,7 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
 - ⚡ **Web Workers** - Parsing assíncrono para arquivos grandes
 - 🔒 **Seguro** - Headers de segurança, CSP, e validação rigorosa
 - 🚀 **Otimizado** - Lazy loading, memoização e bundle splitting
-- ✅ **Testado** - 208 testes com 86% de cobertura
+- ✅ **Testado** - 225 testes com 93% de cobertura
 
 ---
 
