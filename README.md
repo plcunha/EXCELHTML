@@ -7,8 +7,8 @@ Um sistema moderno e profissional para transformar arquivos Excel em interfaces 
   <img src="https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/React-19-61dafb?logo=react" alt="React 19" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?logo=tailwindcss" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Tests-208_passing-brightgreen?logo=vitest" alt="208 Tests Passing" />
-  <img src="https://img.shields.io/badge/Coverage-86%25-brightgreen" alt="86% Coverage" />
+  <img src="https://img.shields.io/badge/Tests-209_passing-brightgreen?logo=vitest" alt="209 Tests Passing" />
+  <img src="https://img.shields.io/badge/Coverage-88%25-brightgreen" alt="88% Coverage" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License MIT" />
 </p>
 
