@@ -64,10 +64,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-// Configurar limite de body
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
