@@ -19,7 +19,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Skip links para acessibilidade (pular para conteúdo principal e navegação)
 - ARIA labels e roles semânticos em todos os componentes principais
 - Suporte a leitores de tela com `aria-live` para estados de loading e erro
-- **231 testes unitários** cobrindo store, excel-parser, utils, config, keyboard shortcuts e charts dark mode
+- **234 testes unitários** cobrindo store, excel-parser, utils, config, keyboard shortcuts e charts dark mode
 - **93% de cobertura de código** com testes abrangentes
 - Testes para datetime normalization, schema features, progress alignment
 - Testes para CSV parsing e exportação de dados
