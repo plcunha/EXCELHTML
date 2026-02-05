@@ -1,5 +1,94 @@
 import { describe, it, expect } from 'vitest'
 
+// ============================================
+// DARK MODE THEME UTILITIES
+// ============================================
+
+// Replicated from Charts.tsx for testing
+const getTooltipStyle = (isDarkMode: boolean) => ({
+  backgroundColor: isDarkMode ? '#1f2937' : '#fff',
+  border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+  borderRadius: '8px',
+  boxShadow: isDarkMode 
+    ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' 
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  color: isDarkMode ? '#f3f4f6' : '#374151',
+})
+
+const getChartColors = (isDarkMode: boolean) => ({
+  grid: isDarkMode ? '#374151' : '#e5e7eb',
+  axis: isDarkMode ? '#9ca3af' : '#6b7280',
+  text: isDarkMode ? '#d1d5db' : '#6b7280',
+  labelLine: isDarkMode ? '#9ca3af' : '#6b7280',
+})
+
+// ============================================
+// DARK MODE THEME TESTS
+// ============================================
+
+describe('Chart Dark Mode Theme', () => {
+  describe('getTooltipStyle', () => {
+    it('should return light mode styles when isDarkMode is false', () => {
+      const style = getTooltipStyle(false)
+      
+      expect(style.backgroundColor).toBe('#fff')
+      expect(style.border).toBe('1px solid #e5e7eb')
+      expect(style.color).toBe('#374151')
+      expect(style.boxShadow).toContain('0.1)')
+    })
+    
+    it('should return dark mode styles when isDarkMode is true', () => {
+      const style = getTooltipStyle(true)
+      
+      expect(style.backgroundColor).toBe('#1f2937')
+      expect(style.border).toBe('1px solid #374151')
+      expect(style.color).toBe('#f3f4f6')
+      expect(style.boxShadow).toContain('0.3)')
+    })
+    
+    it('should always include borderRadius', () => {
+      expect(getTooltipStyle(false).borderRadius).toBe('8px')
+      expect(getTooltipStyle(true).borderRadius).toBe('8px')
+    })
+  })
+  
+  describe('getChartColors', () => {
+    it('should return light mode colors when isDarkMode is false', () => {
+      const colors = getChartColors(false)
+      
+      expect(colors.grid).toBe('#e5e7eb')
+      expect(colors.axis).toBe('#6b7280')
+      expect(colors.text).toBe('#6b7280')
+      expect(colors.labelLine).toBe('#6b7280')
+    })
+    
+    it('should return dark mode colors when isDarkMode is true', () => {
+      const colors = getChartColors(true)
+      
+      expect(colors.grid).toBe('#374151')
+      expect(colors.axis).toBe('#9ca3af')
+      expect(colors.text).toBe('#d1d5db')
+      expect(colors.labelLine).toBe('#9ca3af')
+    })
+    
+    it('should return all required color properties', () => {
+      const lightColors = getChartColors(false)
+      const darkColors = getChartColors(true)
+      
+      const requiredKeys = ['grid', 'axis', 'text', 'labelLine']
+      
+      requiredKeys.forEach(key => {
+        expect(lightColors).toHaveProperty(key)
+        expect(darkColors).toHaveProperty(key)
+      })
+    })
+  })
+})
+
+// ============================================
+// CHART DATA STRUCTURE TESTS
+// ============================================
+
 // Test data structures for chart generation
 describe('Chart Data Structures', () => {
   describe('Bar Chart Data', () => {
