@@ -23,6 +23,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **93% de cobertura de código** com testes abrangentes
 - Testes para datetime normalization, schema features, progress alignment
 - Testes para CSV parsing e exportação de dados
+- **Documentação de segurança** (`docs/SECURITY.md`) com vulnerabilidades conhecidas e mitigações
 
 ### Alterado
 - **Otimizado** `DataTable.tsx` com `useCallback` para `handleSort` (evita recriações desnecessárias)
