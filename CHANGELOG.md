@@ -26,6 +26,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Documentação de segurança** (`docs/SECURITY.md`) com vulnerabilidades conhecidas e mitigações
 
 ### Alterado
+- **Atualizado** `lucide-react` de 0.468.0 para 0.563.0 (ícones mais recentes)
+- **Atualizado** `tailwind-merge` de 2.6.1 para 3.4.0 (melhor performance de merge de classes)
 - **Otimizado** `DataTable.tsx` com `useCallback` para `handleSort` (evita recriações desnecessárias)
 - **Otimizado** `Toolbar.tsx` e `Pagination.tsx` com `useCallback` para handlers
 - Corrigido deprecation warning de `substr` para `substring` em `excel-parser.ts`
