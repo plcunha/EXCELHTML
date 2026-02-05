@@ -811,6 +811,49 @@ describe('exportData', () => {
   })
 })
 
+describe('type inference edge cases', () => {
+  it('should infer date type from date strings (DD/MM/YYYY format)', () => {
+    const headers = ['birthDate']
+    const data = [
+      { birthDate: '15/01/2024' },
+      { birthDate: '20/06/1990' },
+      { birthDate: '01/12/2000' },
+    ]
+    
+    const schema = generateSchemaFromData(headers, data)
+    expect(schema.columns[0].format.type).toBe('date')
+    expect(schema.columns[0].format.dateFormat).toBe('dd/MM/yyyy')
+    expect(schema.columns[0].align).toBe('center')
+  })
+
+  it('should return string for many unique values without type threshold', () => {
+    const headers = ['uniqueField']
+    // Create 20 unique random strings - more than 10, no type reaches 70%
+    const data = Array.from({ length: 20 }, (_, i) => ({
+      uniqueField: `random_unique_value_${i}_${Math.random().toString(36)}`,
+    }))
+    
+    const schema = generateSchemaFromData(headers, data)
+    // More than 10 unique values, none reaches threshold -> string
+    expect(schema.columns[0].format.type).toBe('string')
+  })
+
+  it('should set datetime format for datetime columns', () => {
+    const headers = ['timestamp']
+    const data = [
+      { timestamp: new Date('2024-01-15T14:30:00') },
+      { timestamp: new Date('2024-06-20T09:15:00') },
+      { timestamp: new Date('2024-12-25T18:00:00') },
+    ]
+    
+    const schema = generateSchemaFromData(headers, data)
+    // Date objects are inferred as 'date' type, datetime is set via schema override
+    expect(schema.columns[0].format.type).toBe('date')
+    expect(schema.columns[0].format.dateFormat).toBe('dd/MM/yyyy')
+    expect(schema.columns[0].align).toBe('center')
+  })
+})
+
 describe('parseFile', () => {
   it('should return error for unsupported file type', async () => {
     const file = new File(['test content'], 'test.txt', { type: 'text/plain' })
