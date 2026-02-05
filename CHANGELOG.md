@@ -8,6 +8,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Adicionado
+- **Suporte a Dark Mode nos gráficos** - Todos os 5 tipos de gráficos (Barras, Pizza, Linhas, Área, Radar) agora suportam modo escuro
+- Cores dinâmicas para grid, eixos, texto e tooltips baseadas no tema atual
+- Funções auxiliares `getTooltipStyle()` e `getChartColors()` para estilos responsivos ao tema
 - Componente `ErrorBoundary` para tratamento de erros React
 - Componentes `Skeleton` para loading states (Table, Card, Avatar, Upload, Chart, Page)
 - Arquivo `constants.ts` com constantes centralizadas da aplicação
@@ -22,6 +25,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Testes para CSV parsing e exportação de dados
 
 ### Alterado
+- **Otimizado** `DataTable.tsx` com `useCallback` para `handleSort` (evita recriações desnecessárias)
+- **Otimizado** `Toolbar.tsx` e `Pagination.tsx` com `useCallback` para handlers
 - Corrigido deprecation warning de `substr` para `substring` em `excel-parser.ts`
 - Melhorada estrutura semântica HTML com `role="main"`, `role="banner"`, `role="contentinfo"`
 - Toggle de visualização agora usa padrão ARIA tabs (`role="tablist"`, `role="tab"`, `role="tabpanel"`)
