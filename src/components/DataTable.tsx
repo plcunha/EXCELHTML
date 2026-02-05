@@ -323,15 +323,8 @@ export function DataTable({ className }: DataTableProps) {
     )
   }, [data, tableState.visibleColumns])
   
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        Nenhum dado carregado
-      </div>
-    )
-  }
-  
-  const handleSort = (column: ColumnDefinition) => {
+  // Memoize handleSort para evitar recriações desnecessárias
+  const handleSort = useCallback((column: ColumnDefinition) => {
     if (!column.sortable) return
     
     const currentSort = tableState.sort
@@ -342,6 +335,14 @@ export function DataTable({ className }: DataTableProps) {
     }
     
     setSort({ column: column.key, direction: newDirection })
+  }, [tableState.sort, setSort])
+  
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-500">
+        Nenhum dado carregado
+      </div>
+    )
   }
   
   return (

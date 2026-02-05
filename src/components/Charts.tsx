@@ -36,8 +36,30 @@ const COLORS = [
   '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1',
 ]
 
+// Dark mode tooltip styles
+const getTooltipStyle = (isDarkMode: boolean) => ({
+  backgroundColor: isDarkMode ? '#1f2937' : '#fff',
+  border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+  borderRadius: '8px',
+  boxShadow: isDarkMode 
+    ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' 
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  color: isDarkMode ? '#f3f4f6' : '#374151',
+})
+
+// Grid and axis colors for dark mode
+const getChartColors = (isDarkMode: boolean) => ({
+  grid: isDarkMode ? '#374151' : '#e5e7eb',
+  axis: isDarkMode ? '#9ca3af' : '#6b7280',
+  text: isDarkMode ? '#d1d5db' : '#6b7280',
+  labelLine: isDarkMode ? '#9ca3af' : '#6b7280',
+})
+
 export function Charts({ className }: ChartsProps) {
-  const { data } = useAppStore()
+  const { data, isDarkMode } = useAppStore()
+  
+  const chartColors = useMemo(() => getChartColors(isDarkMode), [isDarkMode])
+  const tooltipStyle = useMemo(() => getTooltipStyle(isDarkMode), [isDarkMode])
   
   const chartData = useMemo(() => {
     if (!data) return null
@@ -117,7 +139,12 @@ export function Charts({ className }: ChartsProps) {
   // Se não há dados suficientes para gráficos
   if (!barData && !pieData) {
     return (
-      <div className={cn('p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-200', className)}>
+      <div className={cn(
+        'p-8 text-center rounded-xl border',
+        'bg-white border-gray-200 text-gray-500',
+        'dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400',
+        className
+      )}>
         <p>Dados insuficientes para gerar gráficos</p>
         <p className="text-sm mt-1">Adicione colunas numéricas ou categóricas</p>
       </div>
@@ -128,24 +155,21 @@ export function Charts({ className }: ChartsProps) {
     <div className={cn('grid gap-6 md:grid-cols-2', className)}>
       {/* Gráfico de Barras */}
       {barData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className={cn(
+          'rounded-xl border shadow-soft p-4',
+          'bg-white border-gray-200',
+          'dark:bg-gray-800 dark:border-gray-700'
+        )}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
             {barData.column.label}
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -155,8 +179,12 @@ export function Charts({ className }: ChartsProps) {
       
       {/* Gráfico de Pizza */}
       {pieData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className={cn(
+          'rounded-xl border shadow-soft p-4',
+          'bg-white border-gray-200',
+          'dark:bg-gray-800 dark:border-gray-700'
+        )}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
             Distribuição: {pieData.column.label}
           </h3>
           <div className="h-64">
@@ -171,20 +199,13 @@ export function Charts({ className }: ChartsProps) {
                   paddingAngle={2}
                   dataKey="value"
                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  labelLine={{ stroke: '#6b7280' }}
+                  labelLine={{ stroke: chartColors.labelLine }}
                 >
                   {pieData.data.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -193,25 +214,22 @@ export function Charts({ className }: ChartsProps) {
       
       {/* Gráfico de Linha */}
       {lineData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className={cn(
+          'rounded-xl border shadow-soft p-4',
+          'bg-white border-gray-200',
+          'dark:bg-gray-800 dark:border-gray-700'
+        )}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
             Comparativo
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineData.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                />
-                <Legend />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend wrapperStyle={{ color: chartColors.text }} />
                 {lineData.columns.map((col, index) => (
                   <Line
                     key={col.key}
@@ -232,8 +250,12 @@ export function Charts({ className }: ChartsProps) {
       
       {/* Gráfico de Área */}
       {areaData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className={cn(
+          'rounded-xl border shadow-soft p-4',
+          'bg-white border-gray-200',
+          'dark:bg-gray-800 dark:border-gray-700'
+        )}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
             Tendência: {areaData.column.label}
           </h3>
           <div className="h-64">
@@ -245,17 +267,10 @@ export function Charts({ className }: ChartsProps) {
                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <YAxis tick={{ fontSize: 12, fill: chartColors.text }} stroke={chartColors.axis} />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Area
                   type="monotone"
                   dataKey="value"
@@ -272,22 +287,26 @@ export function Charts({ className }: ChartsProps) {
       
       {/* Gráfico Radar */}
       {radarData && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-soft p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        <div className={cn(
+          'rounded-xl border shadow-soft p-4',
+          'bg-white border-gray-200',
+          'dark:bg-gray-800 dark:border-gray-700'
+        )}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
             Análise Multidimensional
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData.data}>
-                <PolarGrid stroke="#e5e7eb" />
+                <PolarGrid stroke={chartColors.grid} />
                 <PolarAngleAxis 
                   dataKey="subject" 
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  tick={{ fontSize: 11, fill: chartColors.text }}
                 />
                 <PolarRadiusAxis 
                   angle={30} 
                   domain={[0, 100]} 
-                  tick={{ fontSize: 10, fill: '#9ca3af' }}
+                  tick={{ fontSize: 10, fill: chartColors.axis }}
                 />
                 <Radar
                   name="Média"
@@ -297,12 +316,7 @@ export function Charts({ className }: ChartsProps) {
                   fillOpacity={0.5}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
+                  contentStyle={tooltipStyle}
                   formatter={(value: number) => [`${value}%`, 'Média Normalizada']}
                 />
               </RadarChart>
