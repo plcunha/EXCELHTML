@@ -8,23 +8,23 @@
 
 :root {
   /* Cores primárias - podem ser sobrescritas por tema */
-  --color-primary: #3b82f6;
+  --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
   --color-primary-light: #60a5fa;
-  --color-accent: #22c55e;
-  
+  --color-accent: #16a34a;
+
   /* Cores de superfície */
   --color-background: #f8fafc;
   --color-surface: #ffffff;
   --color-text: #0f172a;
   --color-text-secondary: #64748b;
   --color-border: #e2e8f0;
-  
+
   /* Cores de feedback */
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
   
   /* Raio de borda */
   --radius: 0.5rem;

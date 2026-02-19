@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 import { exportData } from '@/lib/excel-parser'
 import { downloadFile } from '@/lib/utils'
+import { useToast } from './Toast'
+import { FilterPanel } from './FilterPanel'
 
 interface ToolbarProps {
   className?: string
@@ -37,6 +39,7 @@ export function Toolbar({ className }: ToolbarProps) {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const columnPickerRef = useRef<HTMLDivElement>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
+  const toast = useToast()
   
   // Fechar menus ao clicar fora
   useEffect(() => {
@@ -62,7 +65,8 @@ export function Toolbar({ className }: ToolbarProps) {
     
     downloadFile(blob, filename)
     setShowExportMenu(false)
-  }, [data])
+    toast.success(`Arquivo exportado: ${filename}`)
+  }, [data, toast])
   
   const handlePrint = useCallback(() => {
     window.print()
@@ -93,25 +97,26 @@ export function Toolbar({ className }: ToolbarProps) {
   const hasFilters = tableState.filters.length > 0 || tableState.search
   
   return (
-    <div className={cn('flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-soft', className)}>
+    <div className={cn('flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-soft', className)}>
       {/* Busca */}
       <div className="relative flex-1 min-w-[200px] max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
         <input
           type="text"
           placeholder="Buscar..."
           value={tableState.search}
           onChange={handleSearchChange}
           className={cn(
-            'w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200',
+            'w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700',
+            'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
             'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-            'placeholder:text-gray-400 transition-all'
+            'placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all'
           )}
         />
         {tableState.search && (
           <button
             onClick={handleClearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Limpar busca"
           >
             <X className="w-4 h-4" aria-hidden="true" />
@@ -120,7 +125,7 @@ export function Toolbar({ className }: ToolbarProps) {
       </div>
       
       {/* Separador */}
-      <div className="h-6 w-px bg-gray-200" />
+      <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
       
       {/* Botões de ação */}
       <div className="flex items-center gap-2">
@@ -130,7 +135,7 @@ export function Toolbar({ className }: ToolbarProps) {
             onClick={clearFilters}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
-              'text-red-600 bg-red-50 hover:bg-red-100 transition-colors'
+              'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors'
             )}
             aria-label="Limpar todos os filtros"
           >
@@ -139,14 +144,17 @@ export function Toolbar({ className }: ToolbarProps) {
           </button>
         )}
         
+        {/* Filtros */}
+        <FilterPanel />
+        
         {/* Seletor de colunas */}
         <div className="relative" ref={columnPickerRef}>
           <button
             onClick={handleToggleColumnPicker}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
-              'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
-              showColumnPicker && 'bg-gray-100'
+              'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+              showColumnPicker && 'bg-gray-100 dark:bg-gray-700'
             )}
             aria-label="Selecionar colunas visíveis"
             aria-expanded={showColumnPicker}
@@ -158,24 +166,24 @@ export function Toolbar({ className }: ToolbarProps) {
           </button>
           
           {showColumnPicker && (
-            <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg border border-gray-200 shadow-lg z-50 py-2 max-h-80 overflow-y-auto">
-              <div className="px-3 py-2 border-b border-gray-100">
-                <p className="text-xs font-semibold text-gray-500 uppercase">
+            <div className="absolute top-full right-0 mt-1 w-64 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg z-50 py-2 max-h-80 overflow-y-auto">
+              <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                   Colunas visíveis
                 </p>
               </div>
               {data.schema.columns.map((column) => (
                 <label
                   key={column.key}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                 >
                   <input
                     type="checkbox"
                     checked={tableState.visibleColumns.includes(column.key)}
                     onChange={() => toggleColumn(column.key)}
-                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 bg-white dark:bg-gray-800"
                   />
-                  <span className="text-sm text-gray-700">{column.label}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{column.label}</span>
                 </label>
               ))}
             </div>
@@ -188,8 +196,8 @@ export function Toolbar({ className }: ToolbarProps) {
             onClick={handleToggleExportMenu}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
-              'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
-              showExportMenu && 'bg-gray-100'
+              'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+              showExportMenu && 'bg-gray-100 dark:bg-gray-700'
             )}
             aria-label="Exportar dados"
             aria-expanded={showExportMenu}
@@ -201,22 +209,22 @@ export function Toolbar({ className }: ToolbarProps) {
           </button>
           
           {showExportMenu && (
-            <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-50 py-1">
+            <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg z-50 py-1">
               <button
                 onClick={() => handleExport('xlsx')}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Excel (.xlsx)
               </button>
               <button
                 onClick={() => handleExport('csv')}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 CSV (.csv)
               </button>
               <button
                 onClick={() => handleExport('json')}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 JSON (.json)
               </button>
@@ -229,7 +237,7 @@ export function Toolbar({ className }: ToolbarProps) {
           onClick={handlePrint}
           className={cn(
             'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
-            'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors'
+            'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
           )}
           aria-label="Imprimir tabela"
         >
@@ -243,8 +251,8 @@ export function Toolbar({ className }: ToolbarProps) {
           className={cn(
             'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors',
             isEditMode 
-              ? 'text-primary-600 bg-primary-50 hover:bg-primary-100 ring-1 ring-primary-200' 
-              : 'text-gray-600 bg-gray-50 hover:bg-gray-100'
+              ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 ring-1 ring-primary-200 dark:ring-primary-800' 
+              : 'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
           )}
           aria-label={isEditMode ? 'Desativar modo de edição' : 'Ativar modo de edição'}
           aria-pressed={isEditMode}
@@ -262,7 +270,7 @@ export function Toolbar({ className }: ToolbarProps) {
           onClick={resetTableState}
           className={cn(
             'flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg',
-            'text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors'
+            'text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
           )}
           title="Resetar visualização"
           aria-label="Resetar visualização da tabela"

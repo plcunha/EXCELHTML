@@ -16,6 +16,7 @@ import {
 import { cn, formatValue } from '@/lib/utils'
 import { useAppStore, useFilteredData } from '@/lib/store'
 import type { ColumnDefinition, CellValue } from '@/types'
+import { EMAIL_REGEX, URL_REGEX, PHONE_REGEX } from '@/lib/constants'
 
 // ============================================
 // COMPONENTES DE CÉLULA ESPECIALIZADOS
@@ -45,7 +46,7 @@ function ProgressCell({ value }: CellProps) {
   
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',
@@ -56,7 +57,7 @@ function ProgressCell({ value }: CellProps) {
           style={{ width: `${numValue}%` }}
         />
       </div>
-      <span className="text-xs text-gray-500 w-9 text-right">{numValue}%</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 w-9 text-right">{numValue}%</span>
     </div>
   )
 }
@@ -67,12 +68,12 @@ function BooleanCell({ value }: CellProps) {
   return (
     <div className="flex justify-center">
       {boolValue ? (
-        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
-          <Check className="w-3 h-3 text-green-600" />
+        <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+          <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
         </div>
       ) : (
-        <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
-          <X className="w-3 h-3 text-red-600" />
+        <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+          <X className="w-3 h-3 text-red-600 dark:text-red-400" />
         </div>
       )}
     </div>
@@ -81,6 +82,16 @@ function BooleanCell({ value }: CellProps) {
 
 function EmailCell({ value }: CellProps) {
   const email = String(value ?? '')
+  const isValid = EMAIL_REGEX.test(email)
+  
+  if (!isValid) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+        <Mail className="w-3.5 h-3.5 text-gray-400" />
+        {email}
+      </span>
+    )
+  }
   
   return (
     <a
@@ -95,13 +106,23 @@ function EmailCell({ value }: CellProps) {
 
 function UrlCell({ value }: CellProps) {
   const url = String(value ?? '')
-  
+  const isValid = URL_REGEX.test(url)
+
+  if (!isValid) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+        <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+        <span className="truncate">{url}</span>
+      </span>
+    )
+  }
+
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-800 hover:underline truncate max-w-[200px]"
+      className="inline-flex items-center gap-1.5 text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 hover:underline truncate max-w-[200px]"
     >
       <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="truncate">{url.replace(/^https?:\/\//, '')}</span>
@@ -111,11 +132,21 @@ function UrlCell({ value }: CellProps) {
 
 function PhoneCell({ value }: CellProps) {
   const phone = String(value ?? '')
-  
+  const isValid = PHONE_REGEX.test(phone)
+
+  if (!isValid) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+        <Phone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+        {phone}
+      </span>
+    )
+  }
+
   return (
     <a
       href={`tel:${phone.replace(/\D/g, '')}`}
-      className="inline-flex items-center gap-1.5 text-gray-700 hover:text-primary-600"
+      className="inline-flex items-center gap-1.5 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
     >
       <Phone className="w-3.5 h-3.5" />
       {phone}
@@ -125,10 +156,11 @@ function PhoneCell({ value }: CellProps) {
 
 function ImageCell({ value }: CellProps) {
   const url = String(value ?? '')
-  
+  const isValid = url !== '' && URL_REGEX.test(url)
+
   return (
     <div className="flex items-center justify-center">
-      {url ? (
+      {isValid ? (
         // eslint-disable-next-line @next/next/no-img-element -- Dynamic external URLs from Excel data
         <img
           src={url}
@@ -140,8 +172,8 @@ function ImageCell({ value }: CellProps) {
           }}
         />
       ) : null}
-      <div className={cn('w-8 h-8 rounded bg-gray-200 flex items-center justify-center', url && 'hidden')}>
-        <ImageIcon className="w-4 h-4 text-gray-400" />
+      <div className={cn('w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center', isValid && 'hidden')}>
+        <ImageIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
       </div>
     </div>
   )
@@ -219,12 +251,10 @@ function EditableCell({
     if (isEditing && inputRef.current) {
       inputRef.current.focus()
       inputRef.current.select()
+      // Reset edit value to current prop value when entering edit mode
+      setEditValue(String(value ?? ''))
     }
-  }, [isEditing])
-  
-  useEffect(() => {
-    setEditValue(String(value ?? ''))
-  }, [value])
+  }, [isEditing, value])
   
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -346,23 +376,23 @@ export function DataTable({ className }: DataTableProps) {
   }
   
   return (
-    <div className={cn('overflow-hidden rounded-xl border border-gray-200 bg-white shadow-soft', className)}>
+    <div className={cn('overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-soft', className)}>
       <div className="overflow-x-auto">
         <table className="w-full" role="grid" aria-label="Tabela de dados">
           {/* Header */}
           <thead>
-            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
               {visibleColumns.map((column) => (
                 <th
                   key={column.key}
                   scope="col"
                   className={cn(
-                    'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider',
-                    column.sortable && 'cursor-pointer hover:bg-gray-100 select-none transition-colors',
+                    'px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider',
+                    column.sortable && 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 select-none transition-colors',
                     column.align === 'center' && 'text-center',
                     column.align === 'right' && 'text-right',
-                    column.sticky === 'left' && 'sticky left-0 bg-gray-50 z-10',
-                    column.sticky === 'right' && 'sticky right-0 bg-gray-50 z-10',
+                    column.sticky === 'left' && 'sticky left-0 bg-gray-50 dark:bg-gray-800 z-10',
+                    column.sticky === 'right' && 'sticky right-0 bg-gray-50 dark:bg-gray-800 z-10',
                   )}
                   style={{ width: column.width }}
                   onClick={() => handleSort(column)}
@@ -386,12 +416,12 @@ export function DataTable({ className }: DataTableProps) {
                   )}>
                     <span>{column.label}</span>
                     {column.sortable && (
-                      <span className="text-gray-400" aria-hidden="true">
+                      <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">
                         {tableState.sort?.column === column.key ? (
                           tableState.sort.direction === 'asc' ? (
-                            <ArrowUp className="w-3.5 h-3.5 text-primary-600" />
+                            <ArrowUp className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                           ) : (
-                            <ArrowDown className="w-3.5 h-3.5 text-primary-600" />
+                            <ArrowDown className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                           )
                         ) : (
                           <ArrowUpDown className="w-3.5 h-3.5" />
@@ -405,12 +435,12 @@ export function DataTable({ className }: DataTableProps) {
           </thead>
           
           {/* Body */}
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={visibleColumns.length}
-                  className="px-4 py-12 text-center text-gray-500"
+                  className="px-4 py-12 text-center text-gray-500 dark:text-gray-400"
                 >
                   Nenhum resultado encontrado
                 </td>
@@ -422,24 +452,24 @@ export function DataTable({ className }: DataTableProps) {
                   <tr
                     key={rowId}
                     className={cn(
-                      'hover:bg-gray-50/50 transition-colors',
-                      isEditMode && 'hover:bg-primary-50/30'
+                      'hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors',
+                      isEditMode && 'hover:bg-primary-50/30 dark:hover:bg-primary-900/20'
                     )}
                   >
                     {visibleColumns.map((column) => {
                       const isThisCellEditing = editingCell?.rowId === rowId && editingCell?.columnKey === column.key
                       const isEditableType = !['image', 'url', 'email', 'phone'].includes(column.format.type)
-                      
+
                       return (
                         <td
                           key={`${rowId}-${column.key}`}
                           className={cn(
-                            'px-4 py-3 text-sm text-gray-700',
+                            'px-4 py-3 text-sm text-gray-700 dark:text-gray-300',
                             column.align === 'center' && 'text-center',
                             column.align === 'right' && 'text-right',
-                            column.sticky === 'left' && 'sticky left-0 bg-white z-10',
-                            column.sticky === 'right' && 'sticky right-0 bg-white z-10',
-                            isEditMode && isEditableType && 'cursor-pointer hover:bg-primary-50',
+                            column.sticky === 'left' && 'sticky left-0 bg-white dark:bg-gray-900 z-10',
+                            column.sticky === 'right' && 'sticky right-0 bg-white dark:bg-gray-900 z-10',
+                            isEditMode && isEditableType && 'cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900/30',
                             isThisCellEditing && 'p-1',
                           )}
                         >
@@ -466,12 +496,12 @@ export function DataTable({ className }: DataTableProps) {
           </tbody>
         </table>
       </div>
-      
+
       {/* Footer com contagem */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-500">
+      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
         Mostrando {rows.length} de {totalFiltered} resultados
         {totalFiltered !== data.rows.length && (
-          <span className="text-gray-400"> (filtrado de {data.rows.length} total)</span>
+          <span className="text-gray-400 dark:text-gray-500"> (filtrado de {data.rows.length} total)</span>
         )}
       </div>
     </div>

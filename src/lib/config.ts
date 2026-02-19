@@ -6,19 +6,19 @@ import type { CompanyConfig, CompanyTheme } from '@/types'
 
 export const defaultTheme: CompanyTheme = {
   colors: {
-    primary: '#3b82f6',
+    primary: '#2563eb',        // Ajustado: mais escuro para melhor contraste (4.5:1)
     primaryDark: '#1d4ed8',
     primaryLight: '#60a5fa',
-    accent: '#22c55e',
+    accent: '#16a34a',         // Ajustado: verde mais escuro
     background: '#f8fafc',
     surface: '#ffffff',
     text: '#0f172a',
     textSecondary: '#64748b',
     border: '#e2e8f0',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
+    success: '#16a34a',        // Ajustado: mesmo valor do accent
+    warning: '#d97706',        // Ajustado: âmbar mais escuro
+    error: '#dc2626',          // Ajustado: vermelho mais escuro (4.5:1)
+    info: '#2563eb',           // Ajustado: igual primary
   },
   borderRadius: 'lg',
   shadows: 'soft',

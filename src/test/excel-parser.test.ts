@@ -284,16 +284,42 @@ describe('generateSchemaFromData', () => {
 
     it('should detect number type with string numbers', () => {
       const headers = ['quantity']
-      // Numbers as strings should be detected by parseFloat
+      // Numbers as strings should be detected by parseNumericString
       const data = [
         { quantity: '100' },
         { quantity: '200' },
         { quantity: '300' },
       ]
-      
+
       const schema = generateSchemaFromData(headers, data)
-      // String numbers don't match typeof value === 'number', so they become strings
-      expect(['string', 'badge']).toContain(schema.columns[0].format.type)
+      // String numbers are now correctly detected as numbers
+      expect(schema.columns[0].format.type).toBe('number')
+    })
+
+    it('should detect Brazilian number format (comma as decimal)', () => {
+      const headers = ['valor']
+      // Brazilian format: 1.234,56 (period thousands, comma decimal)
+      const data = [
+        { valor: '1.234,56' },
+        { valor: '2.500,00' },
+        { valor: '99,99' },
+      ]
+
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('number')
+    })
+
+    it('should detect US number format (period as decimal)', () => {
+      const headers = ['amount']
+      // US format: 1,234.56 (comma thousands, period decimal)
+      const data = [
+        { amount: '1,234.56' },
+        { amount: '2,500.00' },
+        { amount: '99.99' },
+      ]
+
+      const schema = generateSchemaFromData(headers, data)
+      expect(schema.columns[0].format.type).toBe('number')
     })
   })
 

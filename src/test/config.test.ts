@@ -13,8 +13,8 @@ import type { CompanyTheme } from '../types'
 describe('config', () => {
   describe('Theme Constants', () => {
     it('should have valid default theme', () => {
-      expect(defaultTheme.colors.primary).toBe('#3b82f6')
-      expect(defaultTheme.colors.accent).toBe('#22c55e')
+      expect(defaultTheme.colors.primary).toBe('#2563eb')
+      expect(defaultTheme.colors.accent).toBe('#16a34a')
       expect(defaultTheme.borderRadius).toBe('lg')
       expect(defaultTheme.shadows).toBe('soft')
     })
@@ -78,9 +78,9 @@ describe('config', () => {
   describe('generateCSSVariables', () => {
     it('should generate color variables', () => {
       const vars = generateCSSVariables(defaultTheme)
-      
-      expect(vars['--color-primary']).toBe('#3b82f6')
-      expect(vars['--color-accent']).toBe('#22c55e')
+
+      expect(vars['--color-primary']).toBe('#2563eb')
+      expect(vars['--color-accent']).toBe('#16a34a')
       expect(vars['--color-background']).toBe('#f8fafc')
     })
 
@@ -139,16 +139,16 @@ describe('config', () => {
 
     it('should apply CSS variables to element', () => {
       applyTheme(defaultTheme, mockElement)
-      
-      expect(mockElement.style.getPropertyValue('--color-primary')).toBe('#3b82f6')
-      expect(mockElement.style.getPropertyValue('--color-accent')).toBe('#22c55e')
+
+      expect(mockElement.style.getPropertyValue('--color-primary')).toBe('#2563eb')
+      expect(mockElement.style.getPropertyValue('--color-accent')).toBe('#16a34a')
       expect(mockElement.style.getPropertyValue('--radius')).toBe('0.5rem')
     })
 
     it('should apply theme to document.documentElement by default', () => {
       applyTheme(defaultTheme)
-      
-      expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('#3b82f6')
+
+      expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('#2563eb')
     })
 
     it('should apply dark theme correctly', () => {

@@ -356,11 +356,11 @@ export function SkeletonChart({ className }: { className?: string }) {
   return (
     <div className={cn('p-4', className)}>
       <div className="flex items-end justify-between gap-2 h-48">
-        {Array.from({ length: 7 }).map((_, index) => (
+        {[65, 42, 88, 35, 73, 50, 80].map((height, index) => (
           <Skeleton
             key={index}
             className="flex-1"
-            style={{ height: `${30 + Math.random() * 70}%` }}
+            style={{ height: `${height}%` }}
             rounded="sm"
           />
         ))}

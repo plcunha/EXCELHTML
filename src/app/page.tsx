@@ -7,21 +7,83 @@ import {
   DataTable, 
   Toolbar, 
   Pagination,
-  Charts 
+  Charts,
+  ErrorBoundary,
+  SkeletonToolbar,
+  SkeletonTable,
+  ToastContainer,
+  useToast,
+  ConfirmDialog
 } from '@/components'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
+import { processData } from '@/lib/excel-parser'
+import { useExcelWorker } from '@/lib/useExcelWorker'
+import { SUPPORTED_MIME_TYPES, SUPPORTED_EXTENSIONS, MAX_FILE_SIZE } from '@/lib/constants'
 import { BarChart3, Table2, Upload, Sparkles, Keyboard, X } from 'lucide-react'
 import { useKeyboardShortcuts, formatShortcut, type KeyboardShortcut } from '@/lib/useKeyboardShortcuts'
 
 type ViewMode = 'table' | 'charts'
 
 export default function HomePage() {
-  const { data, isLoading, error, toggleDarkMode, clearData, setSearch, setPage, tableState } = useAppStore()
+  const { data, isLoading, error, toggleDarkMode, clearData, setSearch, setPage, tableState, setData, setLoading, setError } = useAppStore()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Web Worker for parsing files via Ctrl+O
+  const { parseFile } = useExcelWorker()
+  const toast = useToast()
+  
+  // Handle file input change (triggered by Ctrl+O → fileInputRef.click())
+  const handleFileInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+    
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Validate file type
+      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+      const isValidType = (SUPPORTED_MIME_TYPES as readonly string[]).includes(file.type) || (SUPPORTED_EXTENSIONS as readonly string[]).includes(extension)
+      
+      if (!isValidType) {
+        throw new Error('Formato de arquivo não suportado. Use .xlsx, .xls ou .csv')
+      }
+      
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error('Arquivo muito grande. Máximo: 50MB')
+      }
+      
+      // Parse file using Web Worker
+      const parseResult = await parseFile(file)
+      
+      if (parseResult.headers.length === 0) {
+        throw new Error('Não foi possível ler os dados do arquivo')
+      }
+      
+      // Process data
+      const processed = processData(parseResult, undefined, {
+        sourceFileName: file.name,
+      })
+      
+      setData(processed)
+      toast.success(`${processed.rows.length} linhas carregadas de "${file.name}"`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao processar arquivo'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setLoading(false)
+    }
+  }, [setData, setLoading, setError, parseFile, toast])
   
   // Memoized actions for keyboard shortcuts
   const focusSearch = useCallback(() => {
@@ -72,8 +134,8 @@ export default function HomePage() {
     { key: 'End', ctrl: true, action: goToLastPage, description: 'Última página' },
     { key: 'ArrowLeft', ctrl: true, action: goToPrevPage, description: 'Página anterior' },
     { key: 'ArrowRight', ctrl: true, action: goToNextPage, description: 'Próxima página' },
-    { key: 'Delete', ctrl: true, action: clearData, description: 'Limpar dados' },
-  ], [focusSearch, triggerUpload, toggleView, toggleDarkMode, clearSearch, goToFirstPage, goToLastPage, goToPrevPage, goToNextPage, clearData])
+    { key: 'Delete', ctrl: true, action: () => { if (data) setShowClearConfirm(true) }, description: 'Limpar dados' },
+  ], [focusSearch, triggerUpload, toggleView, toggleDarkMode, clearSearch, goToFirstPage, goToLastPage, goToPrevPage, goToNextPage, data])
   
   // Register keyboard shortcuts
   useKeyboardShortcuts(shortcuts)
@@ -192,12 +254,14 @@ export default function HomePage() {
               aria-labelledby={viewMode === 'table' ? 'tab-table' : 'tab-charts'}
             >
               {viewMode === 'table' ? (
-                <>
+                <ErrorBoundary level="component">
                   <DataTable />
                   <Pagination />
-                </>
+                </ErrorBoundary>
               ) : (
-                <Charts />
+                <ErrorBoundary level="component">
+                  <Charts />
+                </ErrorBoundary>
               )}
             </div>
             
@@ -214,16 +278,16 @@ export default function HomePage() {
         {/* Estado de carregamento */}
         {isLoading && (
           <div 
-            className="flex flex-col items-center justify-center py-16"
+            className="space-y-4"
             role="status"
             aria-live="polite"
             aria-busy="true"
           >
-            <div 
-              className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"
-              aria-hidden="true"
-            />
-            <p className="mt-4 text-gray-500 dark:text-gray-400">
+            <SkeletonToolbar />
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <SkeletonTable rows={8} columns={5} showHeader />
+            </div>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
               Processando arquivo...
             </p>
             <span className="sr-only">Carregando, por favor aguarde...</span>
@@ -260,6 +324,7 @@ export default function HomePage() {
         accept=".xlsx,.xls,.csv"
         className="hidden"
         aria-hidden="true"
+        onChange={handleFileInputChange}
       />
       
       {/* Keyboard Shortcuts Modal */}
@@ -269,6 +334,25 @@ export default function HomePage() {
           onClose={() => setShowShortcuts(false)}
         />
       )}
+      
+      {/* Toast notifications */}
+      <ToastContainer />
+      
+      {/* Confirm clear data dialog */}
+      <ConfirmDialog
+        open={showClearConfirm}
+        title="Limpar dados"
+        message="Tem certeza que deseja limpar todos os dados carregados? Esta ação não pode ser desfeita."
+        confirmLabel="Limpar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        onConfirm={() => {
+          clearData()
+          setShowClearConfirm(false)
+          toast.info('Dados limpos com sucesso')
+        }}
+        onCancel={() => setShowClearConfirm(false)}
+      />
     </div>
   )
 }

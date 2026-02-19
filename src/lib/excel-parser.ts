@@ -147,6 +147,79 @@ const CURRENCY_REGEX = /^[R$€£¥]\s?[\d.,]+$|^[\d.,]+\s?[R$€£¥]$/
 const PERCENTAGE_REGEX = /^[\d.,]+\s?%$/
 
 /**
+ * Parses a numeric string, handling both US and Brazilian formats
+ * US format: 1,234.56 (comma thousands, period decimal)
+ * Brazilian format: 1.234,56 (period thousands, comma decimal)
+ *
+ * @returns parsed number or null if not a valid number
+ */
+function parseNumericString(str: string): number | null {
+  const trimmed = str.trim()
+
+  // Skip empty strings
+  if (!trimmed) return null
+
+  // Skip strings that are clearly not numbers (contain letters, multiple decimals, etc.)
+  if (/[a-zA-Z]/.test(trimmed)) return null
+
+  // Count decimal separators
+  const periods = (trimmed.match(/\./g) || []).length
+  const commas = (trimmed.match(/,/g) || []).length
+
+  let normalized: string
+
+  if (periods === 0 && commas === 0) {
+    // No separators - simple integer
+    normalized = trimmed
+  } else if (periods === 1 && commas === 0) {
+    // Single period, no commas - could be US decimal (123.45) or ambiguous
+    // Check if the decimal part is 1-2 digits (likely decimal) or 3+ digits (likely thousands)
+    const parts = trimmed.split('.')
+    if (parts[1] && parts[1].length <= 2) {
+      // Likely US decimal: 123.45 or 123.4
+      normalized = trimmed
+    } else {
+      // Could be Brazilian thousands: 1.234 → treat as integer
+      normalized = trimmed.replace('.', '')
+    }
+  } else if (periods === 0 && commas === 1) {
+    // Single comma, no periods - Brazilian decimal (123,45) or US thousands (1,234)
+    const parts = trimmed.split(',')
+    if (parts[1] && parts[1].length <= 2) {
+      // Likely Brazilian decimal: 123,45
+      normalized = trimmed.replace(',', '.')
+    } else {
+      // US thousands separator: 1,234
+      normalized = trimmed.replace(',', '')
+    }
+  } else if (periods >= 1 && commas >= 1) {
+    // Both separators present - determine format by LAST separator position
+    // The last separator is typically the decimal separator
+    const lastCommaIndex = trimmed.lastIndexOf(',')
+    const lastPeriodIndex = trimmed.lastIndexOf('.')
+
+    if (lastCommaIndex > lastPeriodIndex) {
+      // Last separator is comma - Brazilian format (1.234,56)
+      // Remove all periods (thousands), convert comma to period (decimal)
+      normalized = trimmed.replace(/\./g, '').replace(',', '.')
+    } else {
+      // Last separator is period - US format (1,234.56)
+      // Remove all commas (thousands), keep period (decimal)
+      normalized = trimmed.replace(/,/g, '')
+    }
+  } else {
+    // Fallback - remove all separators and try to parse
+    normalized = trimmed.replace(/[,.]/g, '')
+  }
+
+  // Remove any remaining spaces
+  normalized = normalized.replace(/\s/g, '')
+
+  const result = parseFloat(normalized)
+  return isNaN(result) ? null : result
+}
+
+/**
  * Infere o tipo de uma coluna baseado nos valores
  */
 function inferColumnType(values: CellValue[]): ColumnType {
@@ -227,10 +300,10 @@ function inferColumnType(values: CellValue[]): ColumnType {
       typeCounts.date++
       continue
     }
-    
-    // Number
-    const numValue = parseFloat(strValue.replace(/[,\s]/g, ''))
-    if (!isNaN(numValue) && typeof value === 'number') {
+
+    // Number - detect numeric strings (handles both US and Brazilian formats)
+    const numValue = parseNumericString(strValue)
+    if (numValue !== null) {
       // Progress (0-100)
       if (numValue >= 0 && numValue <= 100) {
         typeCounts.progress++
@@ -238,7 +311,7 @@ function inferColumnType(values: CellValue[]): ColumnType {
       typeCounts.number++
       continue
     }
-    
+
     // Default: string
     typeCounts.string++
   }
